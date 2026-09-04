@@ -1,0 +1,7520 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cygan Flight Radar — Ultimate Edition Pro</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --bg:#02050c;
+    --panel:rgba(6,12,24,.92);
+    --panel-b:#132540;
+    --accent:#2fb8ff;
+    --accent2:#7ee1ff;
+    --green:#26d07c;
+    --orange:#f5a623;
+    --red:#ff5b5b;
+    --purple:#b06bff;
+    --text:#eaf2fb;
+    --muted:#7c93b3;
+    --radius:16px;
+}
+
+*{box-sizing:border-box}
+
+html,body,#map{
+    margin:0;
+    width:100%;
+    height:100%;
+}
+
+body{
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',Arial,sans-serif;
+}
+
+#map{
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+}
+
+.leaflet-container{
+    background:var(--bg);
+    font-family:'Inter',Arial,sans-serif;
+}
+
+.leaflet-control-attribution{
+    font-size:9px;
+    background:rgba(2,5,12,.6)!important;
+    color:#5c7291!important;
+}
+
+.leaflet-control-attribution a{
+    color:#7c93b3!important;
+}
+
+::-webkit-scrollbar{
+    width:7px;
+    height:7px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:#1e3a5f;
+    border-radius:10px;
+}
+
+::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+/* ================= TOP BAR ================= */
+
+.top{
+    position:fixed;
+    z-index:1000;
+    top:14px;
+    left:14px;
+    right:14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 18px;
+    border:1px solid var(--panel-b);
+    border-radius:var(--radius);
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+    pointer-events:none;
+}
+
+.top>*{
+    pointer-events:auto;
+}
+
+.brand-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.brand-icon{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#1a6cff,#2fb8ff);
+    box-shadow:0 0 18px rgba(47,184,255,.55);
+    font-size:16px;
+}
+
+.brand{
+    font-weight:900;
+    letter-spacing:1.5px;
+    font-size:16px;
+    background:linear-gradient(90deg,#fff,#9fd8ff);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.sub{
+    font-size:10px;
+    color:var(--muted);
+    letter-spacing:1.6px;
+    margin-top:2px;
+}
+
+.search-wrap{
+    position:relative;
+}
+
+.controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.controls input{
+    width:340px;
+    max-width:38vw;
+    padding:11px 40px 11px 14px;
+    border:1px solid var(--panel-b);
+    border-radius:11px;
+    background:#071224;
+    color:var(--text);
+    outline:none;
+    font-size:13px;
+    font-family:inherit;
+    transition:border-color .2s,box-shadow .2s;
+}
+
+.controls input:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(47,184,255,.15);
+}
+
+.search-icon{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--muted);
+    pointer-events:none;
+    font-size:13px;
+}
+
+.suggest-box{
+    position:absolute;
+    top:calc(100% + 8px);
+    left:0;
+    right:40px;
+    max-height:320px;
+    overflow-y:auto;
+    background:rgba(6,13,26,.98);
+    border:1px solid var(--panel-b);
+    border-radius:12px;
+    box-shadow:0 20px 50px rgba(0,0,0,.7);
+    z-index:2000;
+    display:none;
+}
+
+.suggest-box.show{
+    display:block;
+}
+
+.suggest-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    cursor:pointer;
+    border-bottom:1px solid #0f2038;
+    font-size:12.5px;
+}
+
+.suggest-row:last-child{
+    border-bottom:none;
+}
+
+.suggest-row:hover{
+    background:#0d1e37;
+}
+
+.suggest-row b{
+    color:#fff;
+}
+
+.suggest-row .s-muted{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.iconbtn{
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--panel-b);
+    border-radius:11px;
+    background:#071224;
+    color:var(--text);
+    cursor:pointer;
+    font-weight:bold;
+    font-size:15px;
+    transition:background .2s,border-color .2s,transform .15s;
+}
+
+.iconbtn:hover{
+    background:#102747;
+    border-color:var(--accent);
+}
+
+.iconbtn:active{
+    transform:scale(.92);
+}
+
+.iconbtn.active{
+    border-color:var(--accent);
+    background:#0d2747;
+    box-shadow:0 0 14px rgba(47,184,255,.35);
+}
+
+.iconbtn.spin svg{
+    animation:spin .7s linear;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+    position:fixed;
+    z-index:999;
+    top:92px;
+    left:14px;
+    width:320px;
+    bottom:14px;
+    display:flex;
+    flex-direction:column;
+    border:1px solid var(--panel-b);
+    border-radius:var(--radius);
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+    overflow:hidden;
+}
+
+.sidebar-tabs{
+    display:flex;
+    border-bottom:1px solid var(--panel-b);
+    flex-shrink:0;
+}
+
+.sidebar-tab{
+    flex:1;
+    text-align:center;
+    padding:13px 0;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.5px;
+    color:var(--muted);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:color .2s,border-color .2s;
+}
+
+.sidebar-tab.active{
+    color:var(--accent2);
+    border-color:var(--accent);
+}
+
+.sidebar-pane{
+    display:none;
+    flex:1;
+    min-height:0;
+    flex-direction:column;
+}
+
+.sidebar-pane.active{
+    display:flex;
+}
+
+.filters-pane{
+    padding:16px;
+    overflow-y:auto;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+}
+
+.count-label{
+    font-size:10.5px;
+    letter-spacing:1px;
+    color:var(--muted);
+    text-transform:uppercase;
+}
+
+.count{
+    font-size:28px;
+    font-weight:900;
+    color:var(--green);
+    text-shadow:0 0 16px rgba(38,208,124,.4);
+}
+
+.toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid #0f2038;
+}
+
+.toggle-row:last-of-type{
+    border-bottom:none;
+}
+
+.toggle-label{
+    font-size:13px;
+    color:#d3e2f2;
+}
+
+.switch{
+    position:relative;
+    width:38px;
+    height:21px;
+    flex-shrink:0;
+}
+
+.switch input{
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    background:#16283f;
+    border-radius:20px;
+    cursor:pointer;
+    transition:background .2s;
+}
+
+.slider::before{
+    content:"";
+    position:absolute;
+    width:15px;
+    height:15px;
+    left:3px;
+    top:3px;
+    background:#7c93b3;
+    border-radius:50%;
+    transition:transform .2s,background .2s;
+}
+
+.switch input:checked+.slider{
+    background:#17568f;
+}
+
+.switch input:checked+.slider::before{
+    transform:translateX(17px);
+    background:var(--accent2);
+}
+
+.status{
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid #0f2038;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.5;
+}
+
+.dot{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#e67e22;
+    margin-right:6px;
+}
+
+.dot.ok{
+    background:var(--green);
+    box-shadow:0 0 10px var(--green);
+}
+
+.dot.err{
+    background:var(--red);
+    box-shadow:0 0 10px var(--red);
+}
+
+.legend-title{
+    font-size:10.5px;
+    letter-spacing:1px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin:18px 0 8px;
+}
+
+.alt-gradient{
+    height:10px;
+    border-radius:6px;
+    background:linear-gradient(
+        90deg,
+        #5c7291,
+        #2fb8ff,
+        #26d07c,
+        #f5a623,
+        #ff5b5b,
+        #b06bff
+    );
+    margin-bottom:4px;
+}
+
+.alt-gradient-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:9px;
+    color:var(--muted);
+}
+
+/* ================= LISTA ================= */
+
+.list-search{
+    padding:10px 12px;
+    border-bottom:1px solid var(--panel-b);
+    flex-shrink:0;
+}
+
+.list-search input{
+    width:100%;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--panel-b);
+    background:#071224;
+    color:var(--text);
+    font-size:12px;
+    outline:none;
+    font-family:inherit;
+}
+
+.flight-list{
+    flex:1;
+    overflow-y:auto;
+}
+
+.flight-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    cursor:pointer;
+    border-bottom:1px solid #0d1c33;
+    transition:background .15s;
+}
+
+.flight-row:hover{
+    background:#0d1e37;
+}
+
+.flight-row.selected{
+    background:#0f2a4a;
+    box-shadow:inset 3px 0 0 var(--accent);
+}
+
+.flight-row-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+    box-shadow:0 0 8px currentColor;
+}
+
+.flight-row-main{
+    flex:1;
+    min-width:0;
+}
+
+.flight-row-call{
+    font-size:13px;
+    font-weight:700;
+    color:#fff;
+}
+
+.flight-row-sub{
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.flight-row-alt{
+    text-align:right;
+    font-size:11px;
+    color:#b9cbe3;
+    flex-shrink:0;
+}
+
+.flight-row-alt small{
+    display:block;
+    color:var(--muted);
+    font-size:8.5px;
+}
+
+.list-empty{
+    padding:30px 16px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+}
+
+/* ================= FOLLOW ================= */
+
+.follow-indicator{
+    position:fixed;
+    z-index:1200;
+    top:82px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:8px 16px;
+    border-radius:30px;
+    background:rgba(6,13,26,.95);
+    border:1px solid var(--accent);
+    color:var(--accent2);
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.5px;
+    box-shadow:0 0 18px rgba(47,184,255,.35);
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.follow-indicator.hidden{
+    display:none;
+}
+
+.pulse-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--accent2);
+    animation:pulse 1.4s infinite;
+}
+
+@keyframes pulse{
+    0%{
+        box-shadow:0 0 0 0 rgba(126,225,255,.6);
+    }
+    70%{
+        box-shadow:0 0 0 8px rgba(126,225,255,0);
+    }
+    100%{
+        box-shadow:0 0 0 0 rgba(126,225,255,0);
+    }
+}
+
+/* ================= CARD ================= */
+
+.card{
+    position:fixed;
+    z-index:1100;
+    right:14px;
+    top:92px;
+    width:420px;
+    max-height:calc(100vh - 106px);
+    overflow-y:auto;
+    padding:0;
+    border:1px solid var(--panel-b);
+    border-radius:var(--radius);
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    box-shadow:0 20px 55px rgba(0,0,0,.75);
+    opacity:0;
+    transform:translateY(-8px);
+    transition:opacity .22s ease,transform .22s ease;
+}
+
+.card.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+.hidden{
+    display:none!important;
+}
+
+.card-inner{
+    padding:18px;
+}
+
+.card h2{
+    margin:0 0 4px;
+    font-size:20px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.muted{
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:12px;
+}
+
+.close-card{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#0d1e37;
+    border:1px solid var(--panel-b);
+    color:var(--text);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    z-index:5;
+}
+
+.close-card:hover{
+    background:#17335a;
+}
+
+.plane-photo-container{
+    width:100%;
+    height:175px;
+    overflow:hidden;
+    background:#071326;
+    position:relative;
+    border-radius:var(--radius) var(--radius) 0 0;
+}
+
+.plane-photo-container img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:opacity .3s;
+}
+
+.plane-photo-caption{
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    background:linear-gradient(
+        transparent,
+        rgba(0,0,0,.92)
+    );
+    font-size:10px;
+    padding:18px 12px 8px;
+    color:#c7ddf0;
+}
+
+.photo-skeleton{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        90deg,
+        #0a1a30 25%,
+        #12253f 37%,
+        #0a1a30 63%
+    );
+    background-size:400% 100%;
+    animation:shimmer 1.4s infinite;
+}
+
+@keyframes shimmer{
+    0%{
+        background-position:100% 0;
+    }
+    100%{
+        background-position:-100% 0;
+    }
+}
+
+.badge-row{
+    display:flex;
+    gap:6px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    background:#0e2444;
+    color:var(--accent2);
+    padding:5px 9px;
+    border-radius:7px;
+    font-size:10.5px;
+    font-weight:700;
+    border:1px solid var(--panel-b);
+}
+
+.info-box{
+    background:#071326;
+    border:1px solid #102038;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+    font-size:12px;
+    line-height:1.6;
+}
+
+.route-box{
+    background:linear-gradient(
+        135deg,
+        #0d2140,
+        #0a1830
+    );
+    border:1px solid var(--panel-b);
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:12px;
+    font-size:12.5px;
+    text-align:center;
+    font-weight:700;
+    color:var(--accent2);
+}
+
+/* ================= KOMPAS ================= */
+
+.compass-wrap{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:#071326;
+    border:1px solid #102038;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+}
+
+.compass{
+    width:62px;
+    height:62px;
+    flex-shrink:0;
+    position:relative;
+}
+
+.compass-needle{
+    transition:transform .4s cubic-bezier(.34,1.4,.64,1);
+    transform-origin:50% 50%;
+}
+
+.compass-heading{
+    font-size:22px;
+    font-weight:900;
+    color:#fff;
+}
+
+.compass-heading small{
+    font-size:11px;
+    color:var(--muted);
+    font-weight:500;
+    margin-left:4px;
+}
+
+.compass-sub{
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:3px;
+}
+
+/* ================= STAT ================= */
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:6px;
+}
+
+.stat{
+    background:#071326;
+    padding:9px;
+    border-radius:9px;
+    border:1px solid #102038;
+    min-height:50px;
+    overflow:hidden;
+}
+
+.stat small{
+    display:block;
+    color:var(--muted);
+    font-size:8px;
+    margin-bottom:3px;
+    text-transform:uppercase;
+    letter-spacing:.3px;
+}
+
+.stat b{
+    font-size:11.5px;
+    color:#fff;
+    word-break:break-word;
+}
+
+.nearest-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:7px 0;
+    border-bottom:1px solid #0f2038;
+    font-size:12px;
+}
+
+.nearest-row:last-child{
+    border-bottom:none;
+}
+
+.nearest-dist{
+    color:var(--accent2);
+    font-weight:700;
+}
+
+/* ================= MARKERY ================= */
+
+.plane-marker{
+    background:transparent!important;
+    border:0!important;
+}
+
+.plane-icon-svg{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px;
+    height:44px;
+    background:transparent!important;
+    transform-origin:50% 50%;
+    will-change:transform;
+    transition:transform .35s ease-out;
+}
+
+.plane-icon-svg svg{
+    width:36px;
+    height:36px;
+    filter:drop-shadow(0 2px 5px rgba(0,0,0,.9));
+    transition:filter .2s;
+}
+
+.plane-marker.selected .plane-icon-svg svg{
+    filter:
+        drop-shadow(0 0 10px rgba(47,184,255,1))
+        drop-shadow(0 2px 5px rgba(0,0,0,.9));
+}
+
+.plane-marker.selected .plane-icon-svg{
+    width:50px;
+    height:50px;
+}
+
+.flight-label{
+    position:absolute;
+    left:38px;
+    top:-4px;
+    white-space:nowrap;
+    padding:4px 9px;
+    border-radius:7px;
+    background:rgba(4,10,20,.95);
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    pointer-events:none;
+    border:1px solid rgba(47,184,255,.5);
+    box-shadow:0 4px 12px rgba(0,0,0,.8);
+}
+
+.airport-marker{
+    background:transparent;
+    border:0;
+}
+
+.airport-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    background:rgba(245,166,35,.95);
+    border:2px solid #fff;
+    border-radius:50%;
+    font-size:12px;
+    box-shadow:0 0 10px rgba(245,166,35,.8);
+    cursor:pointer;
+    transition:transform .15s;
+}
+
+.airport-marker:hover .airport-icon{
+    transform:scale(1.15);
+}
+
+.airport-label{
+    position:absolute;
+    left:31px;
+    top:4px;
+    white-space:nowrap;
+    padding:3px 7px;
+    border-radius:5px;
+    background:rgba(10,18,32,.92);
+    color:var(--orange);
+    font-size:10px;
+    font-weight:700;
+    border:1px solid rgba(245,166,35,.4);
+    pointer-events:none;
+}
+
+/* Ukrywanie nazw miast lotnisk na mapie (przełącznik w ustawieniach) */
+body.hide-city-labels .airport-label{
+    display:none;
+}
+
+/* ================= PRZYCISK ATC ================= */
+
+.atc-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    padding:11px 14px;
+    margin-bottom:12px;
+    border-radius:12px;
+    border:1px solid rgba(47,184,255,.45);
+    background:linear-gradient(135deg,#0d2f52,#0a2038);
+    color:var(--accent2);
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:.3px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:transform .15s,box-shadow .2s,border-color .2s;
+}
+
+.atc-btn:hover{
+    border-color:var(--accent);
+    box-shadow:0 0 16px rgba(47,184,255,.35);
+    transform:translateY(-1px);
+}
+
+.atc-btn:active{
+    transform:scale(.97);
+}
+
+/* ================= TOAST ================= */
+
+.toast-wrap{
+    position:fixed;
+    z-index:3000;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+}
+
+.toast{
+    padding:11px 18px;
+    border-radius:30px;
+    background:rgba(10,4,4,.95);
+    border:1px solid #5a2020;
+    color:#ffb3b3;
+    font-size:12.5px;
+    font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.6);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    animation:toast-in .25s ease;
+}
+
+@keyframes toast-in{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.layers{
+    position:fixed;
+    z-index:1000;
+    right:14px;
+    bottom:14px;
+    display:flex;
+    gap:6px;
+    padding:6px;
+    border:1px solid var(--panel-b);
+    border-radius:14px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+}
+
+.layer-btn{
+    padding:10px 16px;
+    min-width:86px;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:900px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .top{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .controls input{
+        width:100%;
+        max-width:none;
+    }
+
+    .card{
+        left:10px;
+        right:10px;
+        top:auto;
+        bottom:10px;
+        width:auto;
+        max-height:calc(100vh - 165px);
+    }
+
+    .grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div class="top">
+
+    <div class="brand-wrap">
+
+        <div class="brand-icon">✈</div>
+
+        <div>
+            <div class="brand">
+                CYGAN FLIGHT RADAR PRO
+            </div>
+
+            <div class="sub">
+                LIVE ADS-B • REAL MOVEMENT DIRECTION
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+
+        <div class="search-wrap">
+
+            <input
+                id="search"
+                placeholder="Szukaj callsign / ICAO / rejestracja / typ..."
+                autocomplete="off"
+            >
+
+            <span class="search-icon">⌕</span>
+
+            <div
+                id="suggestBox"
+                class="suggest-box"
+            ></div>
+
+        </div>
+
+        <button
+            class="iconbtn"
+            id="refreshBtn"
+            title="Odśwież (R)"
+        >
+            ↻
+        </button>
+
+        <button
+            class="iconbtn"
+            id="locateBtn"
+            title="Moja pozycja"
+        >
+            ◎
+        </button>
+
+    </div>
+
+</div>
+
+<div
+    id="followIndicator"
+    class="follow-indicator hidden"
+>
+    <span class="pulse-dot"></span>
+    ŚLEDZENIE LOTU AKTYWNE
+</div>
+
+<div class="sidebar">
+
+    <div class="sidebar-tabs">
+
+        <div
+            class="sidebar-tab active"
+            data-tab="filters"
+        >
+            FILTRY
+        </div>
+
+        <div
+            class="sidebar-tab"
+            data-tab="list"
+        >
+            LOTY
+        </div>
+
+    </div>
+
+    <div
+        class="sidebar-pane active"
+        id="paneFilters"
+    >
+
+        <div class="filters-pane">
+
+            <div class="row">
+
+                <span class="count-label">
+                    Widoczne loty
+                </span>
+
+                <span
+                    class="count"
+                    id="count"
+                >
+                    0
+                </span>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Tylko w powietrzu
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="airborne"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Etykiety lotów
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="labels"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Pokaż lotniska
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="showAirports"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Nazwy miast na mapie
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="cityLabels"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Niebieski tor lotu
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="showRoute"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Automatyczne śledzenie
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="autoFollow"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="toggle-row">
+
+                <span class="toggle-label">
+                    Płynna animacja ruchu
+                </span>
+
+                <label class="switch">
+                    <input
+                        type="checkbox"
+                        id="smoothMotion"
+                        checked
+                    >
+                    <span class="slider"></span>
+                </label>
+
+            </div>
+
+            <div class="legend-title">
+                Kolor wg wysokości
+            </div>
+
+            <div class="alt-gradient"></div>
+
+            <div class="alt-gradient-labels">
+                <span>Ziemia</span>
+                <span>5k ft</span>
+                <span>15k ft</span>
+                <span>25k ft</span>
+                <span>35k+</span>
+            </div>
+
+            <div class="status">
+
+                <span
+                    id="dot"
+                    class="dot"
+                ></span>
+
+                <span id="status">
+                    Inicjalizowanie...
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div
+        class="sidebar-pane"
+        id="paneList"
+    >
+
+        <div class="list-search">
+
+            <input
+                id="listSearch"
+                placeholder="Filtruj listę..."
+                autocomplete="off"
+            >
+
+        </div>
+
+        <div
+            class="flight-list"
+            id="flightList"
+        ></div>
+
+    </div>
+
+</div>
+
+<div
+    id="card"
+    class="card hidden"
+></div>
+
+<div
+    class="toast-wrap"
+    id="toastWrap"
+></div>
+
+<div class="layers">
+
+    <button
+        class="iconbtn layer-btn"
+        id="radarBtn"
+    >
+        MAPA
+    </button>
+
+    <button
+        class="iconbtn layer-btn active"
+        id="satBtn"
+    >
+        SATELITA
+    </button>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* =========================================================
+   MAPA
+========================================================= */
+
+const map = L.map("map", {
+    center:[52.23,21.01],
+    zoom:6,
+    minZoom:3,
+    maxZoom:18,
+    zoomControl:true,
+    preferCanvas:true
+});
+
+const radarLayer = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        maxZoom:19,
+        attribution:"&copy; OpenStreetMap contributors"
+    }
+);
+
+const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+        maxZoom:19,
+        attribution:"Tiles &copy; Esri"
+    }
+).addTo(map);
+
+
+/* =========================================================
+   STAN
+========================================================= */
+
+let flights = [];
+
+const markers = new Map();
+
+const airportMarkers = new Map();
+
+let selected = null;
+
+
+/*
+    Wybrany samolot.
+    To pozostawiamy jako alias do jego historii,
+    żeby istniejąca karta mogła nadal korzystać
+    z flightHistory.
+*/
+
+let flightHistory = [];
+
+
+/*
+    NOWE:
+    osobna historia dla KAŻDEGO samolotu.
+
+    ICAO24 -> [
+        [lat,lon],
+        [lat,lon],
+        ...
+    ]
+*/
+
+const flightHistories = new Map();
+
+/* Lokalna telemetria istnieje od chwili otwarcia radaru w tej przeglądarce. */
+const flightTelemetry = new Map();
+const flightEvents = new Map();
+
+
+/*
+    NOWE:
+    osobna niebieska linia dla KAŻDEGO samolotu.
+
+    ICAO24 -> Leaflet Polyline
+*/
+
+const flightPathLines = new Map();
+
+
+/*
+    Stara zmienna pozostaje dla kompatybilności
+    z resztą logiki.
+*/
+
+let flightPathLine = null;
+
+let followMode = false;
+
+let lastLoadTime = null;
+
+/* Status naziemny jest wyznaczany z położenia względem lotnisk. */
+const airportGroundTimers = new Map();
+const AIRPORT_GROUND_RADIUS_KM = 2;
+const AIRPORT_GROUND_DELAY_MS = 5000;
+
+
+/* =========================================================
+   LOTNISKA
+========================================================= */
+
+const majorAirports = [
+
+    {
+        name:"Lotnisko Chopina w Warszawie",
+        icao:"EPWA",
+        iata:"WAW",
+        city:"Warszawa",
+        country:"Polska",
+        lat:52.1657,
+        lon:20.9671,
+        elev:"362 ft",
+        atc:"epwa_app"
+    },
+
+    {
+        name:"Port Lotniczy Kraków-Balice",
+        icao:"EPKK",
+        iata:"KRK",
+        city:"Kraków",
+        country:"Polska",
+        lat:50.0777,
+        lon:19.7848,
+        elev:"797 ft",
+        atc:"epkk_app"
+    },
+
+    {
+        name:"Port Lotniczy Katowice-Pyrzowice",
+        icao:"EPKT",
+        iata:"KTW",
+        city:"Katowice",
+        country:"Polska",
+        lat:50.4743,
+        lon:19.0800,
+        elev:"997 ft",
+        atc:"epkt"
+    },
+
+    {
+        name:"Port Lotniczy Wrocław",
+        icao:"EPWR",
+        iata:"WRO",
+        city:"Wrocław",
+        country:"Polska",
+        lat:51.1027,
+        lon:16.8858,
+        elev:"404 ft",
+        atc:"epwr4_app2"
+    },
+
+    {
+        name:"Port Lotniczy Gdańsk",
+        icao:"EPGD",
+        iata:"GDN",
+        city:"Gdańsk",
+        country:"Polska",
+        lat:54.3776,
+        lon:18.4662,
+        elev:"48 ft"
+    },
+
+    {
+        name:"Port Lotniczy Poznań-Ławica",
+        icao:"EPPO",
+        iata:"POZ",
+        city:"Poznań",
+        country:"Polska",
+        lat:52.4210,
+        lon:16.8263,
+        elev:"308 ft",
+        atc:"eppo2"
+    },
+
+    {
+        name:"Warszawa-Modlin",
+        icao:"EPMO",
+        iata:"WMI",
+        city:"Modlin",
+        country:"Polska",
+        lat:52.4511,
+        lon:20.6517,
+        elev:"348 ft"
+    },
+
+    {
+        name:"Rzeszów-Jasionka",
+        icao:"EPRZ",
+        iata:"RZE",
+        city:"Rzeszów",
+        country:"Polska",
+        lat:50.1100,
+        lon:22.0190,
+        elev:"699 ft"
+    }
+
+];
+
+
+/* =========================================================
+   HELPERY
+========================================================= */
+
+function escapeHtml(v){
+
+    return String(v ?? "").replace(
+        /[&<>"']/g,
+        c => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#39;"
+        }[c])
+    );
+
+}
+
+function toNumber(v){
+
+    const n = Number(v);
+
+    return Number.isFinite(n) ? n : null;
+
+}
+
+/* Buduje link do słuchania wieży/ATC danego lotniska na LiveATC.net */
+/*
+    LiveATC nie ma jednego wzoru URL wspólnego dla wszystkich lotnisk —
+    każdy feed ma swoją własną, unikalną nazwę "mount" (np. epkt, epkk_app,
+    eppo2, epwa_app, epwr4_app2). Dlatego przycisk ATC pokazujemy TYLKO
+    dla lotnisk, dla których mamy podany i zweryfikowany mount (pole atc)
+    w danych lotniska. Dla pozostałych (brak potwierdzonego feedu albo
+    lotnisko w ogóle nieobsługiwane przez LiveATC.net) przycisk się nie
+    pojawia, żeby nie prowadzić do martwego linku.
+*/
+function liveAtcUrl(airport){
+
+    if(!airport?.atc)
+        return null;
+
+
+    const icao =
+        String(airport.icao ?? "")
+        .trim()
+        .toLowerCase();
+
+
+    const mount =
+        String(airport.atc)
+        .trim()
+        .toLowerCase();
+
+
+    return `https://www.liveatc.net/hlisten.php?mount=${mount}&icao=${icao}`;
+
+}
+
+/* Feed ADS-B zwraca wysokość w stopach, prędkość w węzłach i V/S w ft/min. */
+function feetToMeters(v){
+
+    const number = toNumber(v);
+
+    return number === null ? null : number * 0.3048;
+
+}
+
+
+function knotsToMetersPerSecond(v){
+
+    const number = toNumber(v);
+
+    return number === null ? null : number * 0.514444;
+
+}
+
+
+function feetPerMinuteToMetersPerSecond(v){
+
+    const number = toNumber(v);
+
+    return number === null ? null : number * 0.00508;
+
+}
+
+/*
+   API może zwrócić flagę jako true/false, 1/0 albo tekst
+   "true"/"false". Boolean("false") jest prawdą w JavaScript,
+   dlatego nie można tu używać zwykłego Boolean(...).
+*/
+function toBoolean(v){
+
+    if(typeof v === "boolean")
+        return v;
+
+
+    if(typeof v === "number")
+        return v !== 0;
+
+
+    if(typeof v === "string"){
+
+        const value = v.trim().toLowerCase();
+
+        if(["true", "1", "yes", "y", "on"].includes(value))
+            return true;
+
+
+        if(["false", "0", "no", "n", "off", "", "null", "undefined"].includes(value))
+            return false;
+
+    }
+
+
+    return false;
+
+}
+
+function isGroundAltitude(v){
+
+    return typeof v === "string" &&
+        v.trim().toLowerCase() === "ground";
+
+}
+
+function normalizeHeading(deg){
+
+    const v = toNumber(deg);
+
+    if(v === null) return null;
+
+    return ((v % 360) + 360) % 360;
+
+}
+
+function getCompassDirection(deg){
+
+    const h = normalizeHeading(deg);
+
+    if(h === null) return "—";
+
+    const dirs = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW"
+    ];
+
+    return dirs[Math.round(h / 22.5) % 16];
+
+}
+
+function distanceKm(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+){
+
+    const R = 6371;
+
+    const dLat =
+        (lat2 - lat1) * Math.PI / 180;
+
+    const dLon =
+        (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat/2)**2 +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2)**2;
+
+    return R * 2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1-a)
+        );
+
+}
+
+
+/* =========================================================
+   BEARING
+========================================================= */
+
+function getBearingBetweenPoints(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+){
+
+    const phi1 =
+        lat1 * Math.PI / 180;
+
+    const phi2 =
+        lat2 * Math.PI / 180;
+
+    const dl =
+        (lon2 - lon1) * Math.PI / 180;
+
+    const y =
+        Math.sin(dl) * Math.cos(phi2);
+
+    const x =
+        Math.cos(phi1) * Math.sin(phi2)
+        -
+        Math.sin(phi1) *
+        Math.cos(phi2) *
+        Math.cos(dl);
+
+    const bearing =
+        Math.atan2(y,x) *
+        180 / Math.PI;
+
+    return (bearing + 360) % 360;
+
+}
+
+
+/* =========================================================
+   HISTORIA WSZYSTKICH SAMOLOTÓW
+========================================================= */
+
+/*
+    Ta funkcja jest wywoływana przy KAŻDYM
+    pobraniu danych ADS-B.
+
+    Dzięki temu nie trzeba klikać samolotu,
+    żeby zacząć zapisywać jego trasę.
+*/
+
+function updateAllFlightHistories(){
+
+    for(const f of flights){
+
+        if(
+            !f.icao ||
+            !Number.isFinite(f.lat) ||
+            !Number.isFinite(f.lon)
+        )
+            continue;
+
+
+        /*
+            Jeśli samolot pojawił się pierwszy raz,
+            tworzymy jego historię.
+        */
+
+        if(!flightHistories.has(f.icao)){
+
+            flightHistories.set(
+                f.icao,
+                [
+                    [f.lat,f.lon]
+                ]
+            );
+
+            continue;
+
+        }
+
+
+        const history =
+            flightHistories.get(
+                f.icao
+            );
+
+
+        const last =
+            history[
+                history.length - 1
+            ];
+
+
+        /*
+            Dodajemy punkt tylko jeśli samolot
+            rzeczywiście przesunął się minimum 20 metrów.
+        */
+
+        if(
+            !last ||
+            distanceKm(
+                last[0],
+                last[1],
+                f.lat,
+                f.lon
+            ) >= 0.02
+        ){
+
+            history.push([
+                f.lat,
+                f.lon
+            ]);
+
+        }
+
+
+        /*
+            Maksymalnie 300 punktów na samolot.
+        */
+
+        if(history.length > 300){
+
+            history.shift();
+
+        }
+
+    }
+
+
+    /*
+        Usuwamy historie samolotów,
+        których nie ma już w aktualnym ADS-B.
+    */
+
+    const activeIds =
+        new Set(
+            flights
+                .map(
+                    f => f.icao
+                )
+                .filter(Boolean)
+        );
+
+
+    for(
+        const [
+            icao,
+            history
+        ]
+        of flightHistories
+    ){
+
+        if(
+            !activeIds.has(icao)
+        ){
+
+            flightHistories.delete(
+                icao
+            );
+
+
+            const line =
+                flightPathLines.get(
+                    icao
+                );
+
+
+            if(line){
+
+                if(
+                    map.hasLayer(
+                        line
+                    )
+                ){
+
+                    map.removeLayer(
+                        line
+                    );
+
+                }
+
+
+                flightPathLines.delete(
+                    icao
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   RYSOWANIE TORÓW WSZYSTKICH SAMOLOTÓW
+========================================================= */
+
+function renderAllFlightPaths(){
+
+    const checkbox =
+        document.getElementById(
+            "showRoute"
+        );
+
+
+    const enabled =
+        checkbox &&
+        checkbox.checked;
+
+
+    /*
+        Jeśli trasy są wyłączone,
+        ukrywamy wszystkie linie.
+    */
+
+    if(!enabled){
+
+        for(
+            const line
+            of flightPathLines.values()
+        ){
+
+            if(
+                map.hasLayer(
+                    line
+                )
+            ){
+
+                map.removeLayer(
+                    line
+                );
+
+            }
+
+        }
+
+        return;
+
+    }
+
+
+    /*
+        Rysujemy trasę każdego samolotu.
+    */
+
+    for(
+        const [
+            icao,
+            history
+        ]
+        of flightHistories
+    ){
+
+        /*
+            Minimum dwa punkty są potrzebne
+            do narysowania odcinka.
+        */
+
+        if(
+            !history ||
+            history.length < 2
+        )
+            continue;
+
+
+        let line =
+            flightPathLines.get(
+                icao
+            );
+
+
+        const isSelected =
+            selected &&
+            selected.icao === icao;
+
+
+        if(!line){
+
+            line =
+                L.polyline(
+                    history,
+                    {
+                        color:"#2fb8ff",
+
+                        /*
+                            Wybrany lot jest mocniejszy,
+                            pozostałe są delikatniejsze.
+                        */
+
+                        weight:
+                            isSelected
+                            ? 4
+                            : 2,
+
+                        opacity:
+                            isSelected
+                            ? .95
+                            : .55,
+
+                        dashArray:"10 8",
+
+                        interactive:false
+                    }
+                );
+
+
+            line.addTo(
+                map
+            );
+
+
+            flightPathLines.set(
+                icao,
+                line
+            );
+
+        }else{
+
+            line.setLatLngs(
+                history
+            );
+
+
+            line.setStyle({
+
+                weight:
+                    isSelected
+                    ? 4
+                    : 2,
+
+                opacity:
+                    isSelected
+                    ? .95
+                    : .55
+
+            });
+
+
+            if(
+                !map.hasLayer(
+                    line
+                )
+            ){
+
+                line.addTo(
+                    map
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   NOWY DOKŁADNY KIERUNEK
+========================================================= */
+
+/*
+    Kierunek każdego samolotu jest liczony
+    z JEGO WŁASNEJ niebieskiej historii.
+
+    Nie korzystamy już z globalnej historii
+    wybranego samolotu.
+*/
+
+function getFlightDirection(f){
+
+    const history =
+        f &&
+        f.icao
+        ?
+        flightHistories.get(
+            f.icao
+        )
+        :
+        null;
+
+
+    if(
+        history &&
+        history.length >= 2
+    ){
+
+        /*
+            Szukamy ostatniego sensownego
+            odcinka trasy.
+        */
+
+        for(
+            let i =
+                history.length - 1;
+
+            i > 0;
+
+            i--
+        ){
+
+            const prev =
+                history[i - 1];
+
+            const cur =
+                history[i];
+
+
+            const dist =
+                distanceKm(
+                    prev[0],
+                    prev[1],
+                    cur[0],
+                    cur[1]
+                );
+
+
+            if(
+                dist >= 0.02
+            ){
+
+                return getBearingBetweenPoints(
+                    prev[0],
+                    prev[1],
+                    cur[0],
+                    cur[1]
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /*
+        Jeśli mamy dopiero pierwszy punkt,
+        używamy headingu ADS-B.
+    */
+
+    return normalizeHeading(
+        f?.track
+    );
+
+}
+
+
+/*
+    SVG samolotu wskazuje domyślnie na północ.
+
+    0   = N
+    90  = E
+    180 = S
+    270 = W
+
+    Dlatego NIE dodajemy -90.
+*/
+
+function getPlaneRotation(heading){
+
+    const v =
+        normalizeHeading(
+            heading
+        );
+
+    if(v === null)
+        return 0;
+
+    return v;
+
+}
+
+
+/* =========================================================
+   ALTITUDE COLOR
+========================================================= */
+
+function getAltitudeColor(altMeters, ground=false){
+
+    if(ground)
+        return "#5c7291";
+
+    if(!Number.isFinite(altMeters))
+        return "#5c7291";
+
+    const ft =
+        altMeters * 3.28084;
+
+    const stops = [
+
+        [0,[92,114,145]],
+
+        [1500,[47,184,255]],
+
+        [8000,[38,208,124]],
+
+        [15000,[245,166,35]],
+
+        [25000,[255,91,91]],
+
+        [35000,[176,107,255]]
+
+    ];
+
+    if(ft <= stops[0][0])
+        return rgb(
+            stops[0][1]
+        );
+
+
+    for(
+        let i=0;
+        i<stops.length-1;
+        i++
+    ){
+
+        const [a,ca] =
+            stops[i];
+
+        const [b,cb] =
+            stops[i+1];
+
+
+        if(
+            ft >= a &&
+            ft <= b
+        ){
+
+            const t =
+                (ft-a) /
+                (b-a);
+
+
+            return rgb(
+                ca.map(
+                    (c,i2) =>
+                        Math.round(
+                            c +
+                            (cb[i2]-c) *
+                            t
+                        )
+                )
+            );
+
+        }
+
+    }
+
+
+    return rgb(
+        stops[
+            stops.length-1
+        ][1]
+    );
+
+}
+
+function rgb(a){
+
+    return `rgb(${a[0]},${a[1]},${a[2]})`;
+
+}
+
+
+/* =========================================================
+   CATEGORY
+========================================================= */
+
+function parseCategory(category){
+
+    const c =
+        String(
+            category ?? ""
+        )
+        .toUpperCase();
+
+
+    if(
+        c.includes("HEAVY") ||
+        c.includes("A5")
+    )
+        return {
+            name:"HEAVY"
+        };
+
+
+    if(
+        c.includes("LARGE") ||
+        c.includes("A4")
+    )
+        return {
+            name:"LARGE"
+        };
+
+
+    if(
+        c.includes("MEDIUM") ||
+        c.includes("A3")
+    )
+        return {
+            name:"MEDIUM"
+        };
+
+
+    if(
+        c.includes("LIGHT") ||
+        c.includes("A1") ||
+        c.includes("A2")
+    )
+        return {
+            name:"LIGHT"
+        };
+
+
+    if(
+        c.includes("ROTOR") ||
+        c === "H" ||
+        c.includes("A7")
+    )
+        return {
+            name:"ROTORCRAFT"
+        };
+
+
+    return {
+        name:"STANDARD"
+    };
+
+}
+
+
+/* =========================================================
+   AIRLINE
+========================================================= */
+
+function getAirline(callsign){
+
+    if(!callsign)
+        return {
+            name:"Nieznany operator",
+            code:"—"
+        };
+
+
+    const c =
+        String(
+            callsign
+        )
+        .trim()
+        .toUpperCase();
+
+
+    const airlines = [
+
+        /* Grupa Ryanair — wszystkie rozpoznawane jako Ryanair */
+        ["RYR","Ryanair"],
+        ["RUK","Ryanair UK"],
+        ["RFR","Ryanair UK"],
+        ["RYS","Ryanair Sun (Buzz)"],
+        ["MAY","Malta Air (Ryanair)"],
+        ["LDE","Lauda Europe (Ryanair)"],
+        ["LDM","Lauda Europe (Ryanair)"],
+
+        ["LOT","LOT Polish Airlines"],
+        ["ENT","Enter Air"],
+        ["WZZ","Wizz Air"],
+        ["WUK","Wizz Air UK"],
+        ["WMT","Wizz Air Malta"],
+
+        ["DLH","Lufthansa"],
+        ["GEC","Lufthansa Cargo"],
+        ["CFG","Condor"],
+        ["BAW","British Airways"],
+        ["KLM","KLM"],
+        ["AFR","Air France"],
+        ["EZY","easyJet"],
+        ["EJU","easyJet Europe"],
+        ["EZS","easyJet Switzerland"],
+        ["EXS","Jet2"],
+        ["TOM","TUI Airways"],
+        ["SMX","SmartLynx"],
+        ["TVS","Smartwings"],
+
+        ["QTR","Qatar Airways"],
+        ["UAE","Emirates"],
+        ["ABY","Air Arabia"],
+        ["THY","Turkish Airlines"],
+        ["PGT","Pegasus Airlines"],
+        ["SXS","SunExpress"],
+
+        ["SWR","Swiss"],
+        ["AUA","Austrian Airlines"],
+        ["SAS","SAS Scandinavian Airlines"],
+        ["NAX","Norwegian Air Shuttle"],
+        ["NOZ","Norwegian Air Sweden"],
+        ["FIN","Finnair"],
+        ["IBE","Iberia"],
+        ["VLG","Vueling"],
+        ["VOE","Volotea"],
+        ["BEL","Brussels Airlines"],
+        ["EIN","Aer Lingus"],
+        ["BTI","airBaltic"],
+        ["CSA","Czech Airlines"],
+        ["ROT","Tarom"],
+        ["TAP","TAP Air Portugal"],
+        ["ITY","ITA Airways"],
+
+        ["ETH","Ethiopian Airlines"],
+        ["SVA","Saudia"],
+        ["ELY","El Al"],
+        ["MSR","EgyptAir"],
+        ["RAM","Royal Air Maroc"],
+        ["KAC","Kuwait Airways"],
+
+        ["AAL","American Airlines"],
+        ["DAL","Delta Air Lines"],
+        ["UAL","United Airlines"],
+        ["ACA","Air Canada"],
+
+        ["CPA","Cathay Pacific"],
+        ["SIA","Singapore Airlines"],
+        ["ANA","All Nippon Airways"],
+        ["JAL","Japan Airlines"],
+        ["CCA","Air China"],
+        ["CES","China Eastern"],
+        ["CSN","China Southern"],
+        ["QFA","Qantas"]
+
+    ];
+
+
+    for(
+        const [
+            code,
+            name
+        ]
+        of airlines
+    ){
+
+        if(
+            c.startsWith(
+                code
+            )
+        )
+            return {
+                name,
+                code
+            };
+
+    }
+
+
+    return {
+        name:
+            "Operator " +
+            c.substring(0,3),
+
+        code:
+            c.substring(0,3)
+    };
+
+}
+
+
+/* =========================================================
+   PLANE SVG
+========================================================= */
+
+function getPlaneSvg(color){
+
+    return `
+        <svg
+            viewBox="0 0 24 24"
+            width="36"
+            height="36"
+            fill="${color}"
+            aria-hidden="true"
+        >
+
+            <path d="
+                M21 16
+                v-2
+                l-8-5
+                V3.5
+                c0-.83-.67-1.5-1.5-1.5
+                S10 2.67 10 3.5
+                V9
+                l-8 5
+                v2
+                l8-2.5
+                V19
+                l-2 1.5
+                V22
+                l3.5-1
+                3.5 1
+                v-1.5
+                L13 19
+                v-5.5
+                l8 2.5
+                z
+            "/>
+
+        </svg>
+    `;
+
+}
+
+
+/* =========================================================
+   STATUS LOTU
+========================================================= */
+
+function getFlightTrend(rate){
+
+    if(!Number.isFinite(rate))
+        return "Brak danych";
+
+
+    if(rate > 0.5)
+        return "↗ Wznoszenie";
+
+
+    if(rate < -0.5)
+        return "↘ Zniżanie";
+
+
+    return "→ Poziomo";
+
+}
+
+function getFlightStatus(f){
+
+    if(f.ground)
+        return "Na ziemi";
+
+
+    return "W powietrzu";
+
+}
+
+function getContactAge(lastContact){
+
+    if(!Number.isFinite(lastContact))
+        return "—";
+
+
+    const seconds =
+        Math.max(
+            0,
+            Math.round(
+                Date.now()/1000 -
+                lastContact
+            )
+        );
+
+
+    if(seconds < 60)
+        return `${seconds} s temu`;
+
+
+    if(seconds < 3600)
+        return `${Math.floor(seconds/60)} min temu`;
+
+
+    return `${Math.floor(seconds/3600)} h temu`;
+
+}
+
+
+/* =========================================================
+   HISTORIA WYBRANEGO SAMOLOTU
+========================================================= */
+
+function syncSelectedHistory(){
+
+    if(
+        selected &&
+        selected.icao
+    ){
+
+        const history =
+            flightHistories.get(
+                selected.icao
+            );
+
+
+        if(history){
+
+            flightHistory =
+                history;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   STARY INTERFEJS HISTORII
+========================================================= */
+
+function updateFlightHistory(f){
+
+    if(
+        !f ||
+        !f.icao
+    )
+        return;
+
+
+    if(
+        !flightHistories.has(
+            f.icao
+        )
+    ){
+
+        flightHistories.set(
+            f.icao,
+            []
+        );
+
+    }
+
+
+    const history =
+        flightHistories.get(
+            f.icao
+        );
+
+
+    if(
+        Number.isFinite(f.lat) &&
+        Number.isFinite(f.lon)
+    ){
+
+        const point =
+            [
+                f.lat,
+                f.lon
+            ];
+
+
+        const last =
+            history[
+                history.length - 1
+            ];
+
+
+        if(
+            !last ||
+            distanceKm(
+                last[0],
+                last[1],
+                point[0],
+                point[1]
+            ) >= 0.02
+        ){
+
+            history.push(
+                point
+            );
+
+        }
+
+
+        if(
+            history.length > 300
+        ){
+
+            history.shift();
+
+        }
+
+    }
+
+
+    flightHistory =
+        history;
+
+
+    renderAllFlightPaths();
+
+}
+
+
+/* =========================================================
+   AKTUALIZACJA TORU
+========================================================= */
+
+function updateFlightPath(f){
+
+    if(!f)
+        return;
+
+
+    updateFlightHistory(
+        f
+    );
+
+
+    renderAllFlightPaths();
+
+}
+
+
+/* =========================================================
+   CZYSZCZENIE WYBRANEJ LINII
+========================================================= */
+
+function clearFlightPath(){
+
+    /*
+        WAŻNE:
+
+        Nie kasujemy flightHistories.
+
+        Dzięki temu kliknięcie samolotu
+        nie resetuje jego wcześniejszej trasy.
+    */
+
+    if(
+        flightPathLine &&
+        map.hasLayer(
+            flightPathLine
+        )
+    ){
+
+        map.removeLayer(
+            flightPathLine
+        );
+
+    }
+
+
+    flightPathLine = null;
+
+    syncSelectedHistory();
+
+}
+
+
+/* =========================================================
+   DŁUGOŚĆ TORU
+========================================================= */
+
+function getFlightDistance(){
+
+    syncSelectedHistory();
+
+
+    if(
+        !flightHistory ||
+        flightHistory.length < 2
+    )
+        return 0;
+
+
+    let total = 0;
+
+
+    for(
+        let i=1;
+        i<flightHistory.length;
+        i++
+    ){
+
+        total +=
+            distanceKm(
+                flightHistory[i-1][0],
+                flightHistory[i-1][1],
+                flightHistory[i][0],
+                flightHistory[i][1]
+            );
+
+    }
+
+
+    return total;
+
+}
+
+
+/* =========================================================
+   LOTNISKA
+========================================================= */
+
+function getNearestAirports(f){
+
+    return majorAirports
+
+        .map(
+            airport => ({
+
+                airport,
+
+                distance:
+                    distanceKm(
+                        f.lat,
+                        f.lon,
+                        airport.lat,
+                        airport.lon
+                    )
+
+            })
+        )
+
+        .sort(
+            (a,b) =>
+                a.distance -
+                b.distance
+        )
+
+        .slice(
+            0,
+            3
+        );
+
+}
+
+
+function getNearestAirport(f){
+
+    return majorAirports
+
+        .map(
+            airport => ({
+
+                airport,
+
+                distance:
+                    distanceKm(
+                        f.lat,
+                        f.lon,
+                        airport.lat,
+                        airport.lon
+                    )
+
+            })
+        )
+
+        .sort(
+            (a,b) =>
+                a.distance -
+                b.distance
+        )[0];
+
+}
+
+
+function updateAirportGroundStatuses(){
+
+    const now = Date.now();
+    const activeIds = new Set();
+
+
+    for(const f of flights){
+
+        if(!f.icao)
+            continue;
+
+
+        activeIds.add(f.icao);
+
+        const nearest = getNearestAirport(f);
+        const inAirportZone = nearest &&
+            nearest.distance <= AIRPORT_GROUND_RADIUS_KM;
+
+
+        /*
+           "ground" z ADS-B jest jednoznacznym potwierdzeniem, że
+           samolot stoi na ziemi. To działa również na lotniskach,
+           których nie ma na naszej skróconej liście majorAirports.
+        */
+        if(f.sourceGround){
+
+            const state = airportGroundTimers.get(f.icao) || {
+                since: now,
+                airport: inAirportZone ? nearest.airport : null
+            };
+
+            airportGroundTimers.set(f.icao, state);
+            f.ground = true;
+            f.groundAirport = state.airport;
+            f.groundSince = state.since;
+            continue;
+
+        }
+
+
+        if(!inAirportZone){
+
+            airportGroundTimers.delete(f.icao);
+            f.ground = false;
+            f.groundAirport = null;
+            f.groundSince = null;
+            continue;
+
+        }
+
+
+        let state = airportGroundTimers.get(f.icao);
+
+        if(!state){
+
+            state = {
+                since: now,
+                airport: nearest.airport
+            };
+
+            airportGroundTimers.set(f.icao, state);
+
+        }
+
+
+        f.groundAirport = state.airport;
+        f.groundSince = state.since;
+        f.ground = now - state.since >= AIRPORT_GROUND_DELAY_MS;
+
+    }
+
+
+    for(const icao of airportGroundTimers.keys()){
+
+        if(!activeIds.has(icao))
+            airportGroundTimers.delete(icao);
+
+    }
+
+}
+
+
+function getAirportZoneTime(f){
+
+    if(!f.groundSince)
+        return "Poza strefą";
+
+
+    const seconds = Math.max(0, Math.floor((Date.now() - f.groundSince) / 1000));
+
+    return `${seconds} s`;
+
+}
+
+
+function updateFlightTelemetry(){
+
+    const now = Date.now();
+
+
+    for(const f of flights){
+
+        if(!f.icao)
+            continue;
+
+
+        const samples = flightTelemetry.get(f.icao) || [];
+        const events = flightEvents.get(f.icao) || [];
+        const previous = samples[samples.length - 1];
+
+
+        if(!previous){
+
+            events.push({
+                time: now,
+                label: "📡 Wykryto w radarze"
+            });
+
+        }else if(previous.ground !== f.ground){
+
+            events.push({
+                time: now,
+                label: f.ground ? "🛬 Lądowanie / postój na ziemi" : "🛫 Start / opuszczenie lotniska"
+            });
+
+        }
+
+
+        samples.push({
+            time: now,
+            alt: f.alt,
+            speed: f.speed,
+            rate: f.rate,
+            ground: f.ground,
+            lat: f.lat,
+            lon: f.lon
+        });
+
+
+        if(samples.length > 120)
+            samples.shift();
+
+
+        if(events.length > 12)
+            events.shift();
+
+
+        flightTelemetry.set(f.icao, samples);
+        flightEvents.set(f.icao, events);
+
+    }
+
+}
+
+
+function getSessionDuration(f){
+
+    const samples = flightTelemetry.get(f.icao) || [];
+
+    if(!samples.length)
+        return "—";
+
+
+    const seconds = Math.max(0, Math.floor((Date.now() - samples[0].time) / 1000));
+
+    if(seconds < 60)
+        return `${seconds} s`;
+
+
+    return `${Math.floor(seconds / 60)} min`;
+
+}
+
+
+/* =========================================================
+   RENDER LOTNISK
+========================================================= */
+
+function renderAirports(){
+
+    const show =
+        document
+        .getElementById(
+            "showAirports"
+        )
+        .checked;
+
+
+    for(
+        const airport
+        of majorAirports
+    ){
+
+        let marker =
+            airportMarkers.get(
+                airport.icao
+            );
+
+
+        if(!show){
+
+            if(
+                marker &&
+                map.hasLayer(
+                    marker
+                )
+            )
+                map.removeLayer(
+                    marker
+                );
+
+
+            continue;
+
+        }
+
+
+        if(marker){
+
+            if(
+                !map.hasLayer(
+                    marker
+                )
+            )
+                marker.addTo(
+                    map
+                );
+
+
+            continue;
+
+        }
+
+
+        const icon =
+            L.divIcon({
+
+                className:
+                    "airport-marker",
+
+                iconSize:
+                    [28,28],
+
+                iconAnchor:
+                    [14,14],
+
+                html:`
+                    <div class="airport-icon">
+                        ✈
+                    </div>
+
+                    <div class="airport-label">
+                        ${escapeHtml(airport.iata)}
+                        -
+                        ${escapeHtml(airport.city)}
+                    </div>
+                `
+
+            });
+
+
+        marker =
+            L.marker(
+                [
+                    airport.lat,
+                    airport.lon
+                ],
+                {
+                    icon
+                }
+            );
+
+
+        marker.on(
+            "click",
+            () =>
+                showAirportCard(
+                    airport
+                )
+        );
+
+
+        marker.addTo(
+            map
+        );
+
+
+        airportMarkers.set(
+            airport.icao,
+            marker
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   KARTA LOTNISKA
+========================================================= */
+
+function showAirportCard(airport){
+
+    selected = null;
+
+    followMode = false;
+
+    clearFlightPath();
+
+
+    document
+        .getElementById(
+            "followIndicator"
+        )
+        .classList
+        .add(
+            "hidden"
+        );
+
+
+    removeSelectedClass();
+
+
+    const nearbyTraffic =
+        flights
+
+        .filter(
+            f =>
+                Number.isFinite(f.lat) &&
+                Number.isFinite(f.lon) &&
+                distanceKm(
+                    f.lat,
+                    f.lon,
+                    airport.lat,
+                    airport.lon
+                ) <= 35
+        )
+
+        .sort(
+            (a,b) =>
+                distanceKm(
+                    a.lat,
+                    a.lon,
+                    airport.lat,
+                    airport.lon
+                )
+                -
+                distanceKm(
+                    b.lat,
+                    b.lon,
+                    airport.lat,
+                    airport.lon
+                )
+        );
+
+
+    const traffic =
+        nearbyTraffic
+
+        .slice(
+            0,
+            20
+        );
+
+
+    const airportZoneTraffic =
+        nearbyTraffic.filter(
+            f =>
+                distanceKm(
+                    f.lat,
+                    f.lon,
+                    airport.lat,
+                    airport.lon
+                ) <= AIRPORT_GROUND_RADIUS_KM
+        );
+
+
+    const groundTraffic =
+        nearbyTraffic.filter(
+            f => f.ground
+        );
+
+
+    const airborneTraffic =
+        nearbyTraffic.filter(
+            f => !f.ground
+        );
+
+
+    const card =
+        document.getElementById(
+            "card"
+        );
+
+
+    card.classList.remove(
+        "hidden"
+    );
+
+
+    requestAnimationFrame(
+        () =>
+            card.classList.add(
+                "show"
+            )
+    );
+
+
+    card.innerHTML = `
+
+        <button
+            class="close-card"
+            id="closeCard"
+        >
+            ×
+        </button>
+
+        <div class="card-inner">
+
+            <h2>
+                🛫
+                ${escapeHtml(airport.name)}
+            </h2>
+
+            <div class="muted">
+                ICAO:
+                <b>${escapeHtml(airport.icao)}</b>
+                •
+                IATA:
+                <b>${escapeHtml(airport.iata)}</b>
+            </div>
+
+            ${
+                liveAtcUrl(airport)
+                ?
+                `
+                    <a
+                        class="atc-btn"
+                        href="${liveAtcUrl(airport)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        🎧
+                        Posłuchaj ATC (LiveATC.net)
+                    </a>
+                `
+                :
+                ""
+            }
+
+            <div class="info-box">
+
+                <div>
+                    <b>Miasto:</b>
+                    ${escapeHtml(airport.city)}
+                </div>
+
+                <div>
+                    <b>Kraj:</b>
+                    ${escapeHtml(airport.country)}
+                </div>
+
+                <div>
+                    <b>Wysokość lotniska:</b>
+                    ${escapeHtml(airport.elev)}
+                </div>
+
+                <div>
+                    <b>ICAO:</b>
+                    ${escapeHtml(airport.icao)}
+                </div>
+
+                <div>
+                    <b>IATA:</b>
+                    ${escapeHtml(airport.iata)}
+                </div>
+
+                <div>
+                    <b>Pozycja:</b>
+                    ${airport.lat.toFixed(5)},
+                    ${airport.lon.toFixed(5)}
+                </div>
+
+                <div>
+                    <b>Samoloty w promieniu 35 km:</b>
+                    ${nearbyTraffic.length}
+                </div>
+
+                <div>
+                    <b>W strefie lotniska (${AIRPORT_GROUND_RADIUS_KM} km):</b>
+                    ${airportZoneTraffic.length}
+                </div>
+
+                <div>
+                    <b>W powietrzu:</b>
+                    ${airborneTraffic.length}
+                    •
+                    <b>Na ziemi:</b>
+                    ${groundTraffic.length}
+                </div>
+
+                <div>
+                    <b>Ostatnie odświeżenie:</b>
+                    ${
+                        lastLoadTime
+                        ?
+                        lastLoadTime.toLocaleTimeString("pl-PL")
+                        :
+                        "—"
+                    }
+                </div>
+
+            </div>
+
+            <div class="route-box">
+                ✈ RUCH W POBLIŻU LOTNISKA
+            </div>
+
+            ${
+                traffic.length
+                ?
+                traffic.map(
+                    f => {
+
+                        const heading =
+                            getFlightDirection(
+                                f
+                            );
+
+
+                        const trend =
+                            getFlightTrend(
+                                f.rate
+                            );
+
+
+                        return `
+
+                            <div
+                                class="info-box"
+                                style="cursor:pointer;"
+                                data-flight-id="${escapeHtml(f.icao)}"
+                            >
+
+                                <b>
+                                    ${escapeHtml(
+                                        f.call ||
+                                        f.icao ||
+                                        "UNKNOWN"
+                                    )}
+                                </b>
+
+                                <br>
+
+                                ${escapeHtml(
+                                    f.type ||
+                                    "Typ nieznany"
+                                )}
+
+                                <br>
+
+                                Kurs:
+                                <b>
+                                    ${
+                                        heading !== null
+                                        ?
+                                        Math.round(
+                                            heading
+                                        )
+                                        +
+                                        "° "
+                                        +
+                                        getCompassDirection(
+                                            heading
+                                        )
+                                        :
+                                        "—"
+                                    }
+                                </b>
+
+                                <br>
+
+                                Wysokość:
+                                ${
+                                    Number.isFinite(
+                                        f.alt
+                                    )
+                                    ?
+                                    Math.round(
+                                        f.alt * 3.28084
+                                    )
+                                    +
+                                    " ft"
+                                    :
+                                    "—"
+                                }
+
+                                <br>
+
+                                Prędkość:
+                                ${
+                                    Number.isFinite(
+                                        f.speed
+                                    )
+                                    ?
+                                    Math.round(
+                                        f.speed * 3.6
+                                    )
+                                    +
+                                    " km/h"
+                                    :
+                                    "—"
+                                }
+
+                                <br>
+
+                                Status:
+                                ${trend}
+
+                            </div>
+
+                        `;
+
+                    }
+                ).join("")
+
+                :
+
+                `
+                    <div class="muted">
+                        Brak samolotów w pobliżu.
+                    </div>
+                `
+            }
+
+        </div>
+    `;
+
+
+    document
+        .getElementById(
+            "closeCard"
+        )
+        .onclick =
+            () =>
+                closeCard();
+
+
+    card
+        .querySelectorAll(
+            "[data-flight-id]"
+        )
+        .forEach(
+            el => {
+
+                el.onclick = () => {
+
+                    const flight =
+                        flights.find(
+                            f =>
+                                f.icao ===
+                                el.dataset.flightId
+                        );
+
+
+                    if(flight)
+                        showFlight(
+                            flight
+                        );
+
+                };
+
+            }
+        );
+
+
+    map.flyTo(
+        [
+            airport.lat,
+            airport.lon
+        ],
+        11,
+        {
+            duration:.7
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ZAMKNIĘCIE KARTY
+========================================================= */
+
+function closeCard(){
+
+    const card =
+        document.getElementById(
+            "card"
+        );
+
+
+    card.classList.remove(
+        "show"
+    );
+
+
+    setTimeout(
+        () =>
+            card.classList.add(
+                "hidden"
+            ),
+        200
+    );
+
+
+    selected = null;
+
+    followMode = false;
+
+
+    document
+        .getElementById(
+            "followIndicator"
+        )
+        .classList
+        .add(
+            "hidden"
+        );
+
+
+    clearFlightPath();
+
+    removeSelectedClass();
+
+    renderAllFlightPaths();
+
+    renderFlightList();
+
+}
+
+
+/* =========================================================
+   POKAŻ LOT
+========================================================= */
+
+function showFlight(f){
+
+    selected = f;
+
+    followMode = true;
+
+
+    /*
+        NIE zerujemy historii.
+
+        Pobieramy całą dotychczasową historię
+        tego ICAO.
+    */
+
+    if(
+        !flightHistories.has(
+            f.icao
+        )
+    ){
+
+        flightHistories.set(
+            f.icao,
+            [
+                [
+                    f.lat,
+                    f.lon
+                ]
+            ]
+        );
+
+    }
+
+
+    flightHistory =
+        flightHistories.get(
+            f.icao
+        );
+
+
+    renderAllFlightPaths();
+
+
+    document
+        .getElementById(
+            "followIndicator"
+        )
+        .classList
+        .remove(
+            "hidden"
+        );
+
+
+    const card =
+        document.getElementById(
+            "card"
+        );
+
+
+    card.classList.remove(
+        "hidden"
+    );
+
+
+    requestAnimationFrame(
+        () =>
+            card.classList.add(
+                "show"
+            )
+    );
+
+
+    updateFlightCard(
+        f
+    );
+
+
+    map.flyTo(
+        [
+            f.lat,
+            f.lon
+        ],
+        Math.max(
+            map.getZoom(),
+            9
+        ),
+        {
+            duration:.7
+        }
+    );
+
+
+    removeSelectedClass();
+
+
+    markers
+        .get(f.icao)
+        ?.marker
+        .getElement()
+        ?.classList
+        .add(
+            "selected"
+        );
+
+
+    renderAllFlightPaths();
+
+    renderFlightList();
+
+}
+
+
+/* =========================================================
+   ZDJĘCIE
+========================================================= */
+
+async function fetchAircraftPhoto(
+    reg,
+    hex
+){
+
+    if(reg){
+
+        try{
+
+            const r =
+                await fetch(
+                    "https://api.planespotters.net/pub/photos/reg/"
+                    +
+                    encodeURIComponent(
+                        reg
+                    )
+                );
+
+
+            const data =
+                await r.json();
+
+
+            if(
+                data.photos &&
+                data.photos.length
+            ){
+
+                return {
+
+                    url:
+                        data.photos[0]
+                        .thumbnail_large
+                        .src,
+
+                    title:
+                        "Planespotters • "
+                        +
+                        reg
+
+                };
+
+            }
+
+        }catch(e){
+
+            console.warn(
+                "Photo error:",
+                e
+            );
+
+        }
+
+    }
+
+
+    if(hex){
+
+        try{
+
+            const r =
+                await fetch(
+                    "https://api.planespotters.net/pub/photos/hex/"
+                    +
+                    encodeURIComponent(
+                        hex
+                    )
+                );
+
+
+            const data =
+                await r.json();
+
+
+            if(
+                data.photos &&
+                data.photos.length
+            ){
+
+                return {
+
+                    url:
+                        data.photos[0]
+                        .thumbnail_large
+                        .src,
+
+                    title:
+                        "Planespotters • ICAO "
+                        +
+                        hex
+
+                };
+
+            }
+
+        }catch(e){
+
+            console.warn(
+                "Photo error:",
+                e
+            );
+
+        }
+
+    }
+
+
+    return {
+
+        url:
+            "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900",
+
+        title:
+            "Zdjęcie poglądowe"
+
+    };
+
+}
+
+
+/* =========================================================
+   KOMPAS
+========================================================= */
+
+function compassSvg(heading){
+
+    const rot =
+        heading === null
+        ? 0
+        : heading;
+
+
+    return `
+
+        <svg
+            viewBox="0 0 100 100"
+            width="62"
+            height="62"
+        >
+
+            <circle
+                cx="50"
+                cy="50"
+                r="46"
+                fill="#050d1c"
+                stroke="#16283f"
+                stroke-width="2"
+            />
+
+            <text
+                x="50"
+                y="14"
+                fill="#5c7291"
+                font-size="9"
+                text-anchor="middle"
+                font-family="Inter"
+            >
+                N
+            </text>
+
+            <text
+                x="50"
+                y="93"
+                fill="#5c7291"
+                font-size="9"
+                text-anchor="middle"
+                font-family="Inter"
+            >
+                S
+            </text>
+
+            <text
+                x="9"
+                y="53"
+                fill="#5c7291"
+                font-size="9"
+                text-anchor="middle"
+                font-family="Inter"
+            >
+                W
+            </text>
+
+            <text
+                x="91"
+                y="53"
+                fill="#5c7291"
+                font-size="9"
+                text-anchor="middle"
+                font-family="Inter"
+            >
+                E
+            </text>
+
+            <g
+                class="compass-needle"
+                style="transform:rotate(${rot}deg)"
+            >
+
+                <polygon
+                    points="50,16 44,54 50,48 56,54"
+                    fill="#2fb8ff"
+                />
+
+                <polygon
+                    points="50,84 44,54 50,60 56,54"
+                    fill="#2a3f5c"
+                />
+
+            </g>
+
+            <circle
+                cx="50"
+                cy="50"
+                r="3.5"
+                fill="#7ee1ff"
+            />
+
+        </svg>
+
+    `;
+
+}
+
+
+/* =========================================================
+   KARTA LOTU
+========================================================= */
+
+async function updateFlightCard(f){
+
+    syncSelectedHistory();
+
+
+    const card =
+        document.getElementById(
+            "card"
+        );
+
+
+    const category =
+        parseCategory(
+            f.category
+        );
+
+
+    const airline =
+        getAirline(
+            f.call
+        );
+
+
+    const heading =
+        getFlightDirection(
+            f
+        );
+
+
+    const altColor =
+        getAltitudeColor(
+            f.alt,
+            f.ground
+        );
+
+
+    const altitudeFt =
+        Number.isFinite(f.alt)
+        ?
+        Math.round(
+            f.alt * 3.28084
+        )
+        .toLocaleString(
+            "pl-PL"
+        )
+        +
+        " ft"
+        :
+        "—";
+
+
+    const altitudeM =
+        Number.isFinite(f.alt)
+        ?
+        Math.round(
+            f.alt
+        )
+        .toLocaleString(
+            "pl-PL"
+        )
+        +
+        " m"
+        :
+        "—";
+
+
+    const speedKmh =
+        Number.isFinite(f.speed)
+        ?
+        Math.round(
+            f.speed * 3.6
+        )
+        +
+        " km/h"
+        :
+        "—";
+
+
+    const speedKts =
+        Number.isFinite(f.speed)
+        ?
+        Math.round(
+            f.speed * 1.94384
+        )
+        +
+        " kt"
+        :
+        "—";
+
+
+    const speedMph =
+        Number.isFinite(f.speed)
+        ?
+        Math.round(
+            f.speed * 2.23694
+        )
+        +
+        " mph"
+        :
+        "—";
+
+
+    const verticalMs =
+        Number.isFinite(f.rate)
+        ?
+        (f.rate > 0 ? "+" : "")
+        +
+        f.rate.toFixed(1)
+        +
+        " m/s"
+        :
+        "—";
+
+
+    const verticalFpm =
+        Number.isFinite(f.rate)
+        ?
+        (f.rate > 0 ? "+" : "")
+        +
+        Math.round(
+            f.rate * 196.85
+        )
+        +
+        " ft/min"
+        :
+        "—";
+
+
+    const lastContact =
+        Number.isFinite(
+            f.lastContact
+        )
+        ?
+        new Date(
+            f.lastContact * 1000
+        ).toLocaleTimeString(
+            "pl-PL"
+        )
+        :
+        "—";
+
+
+    const contactAge =
+        getContactAge(
+            f.lastContact
+        );
+
+
+    const nearest =
+        getNearestAirports(
+            f
+        );
+
+
+    const nearestAirport =
+        getNearestAirport(
+            f
+        );
+
+
+    const travelledDistance =
+        getFlightDistance();
+
+
+    const flightTrend =
+        getFlightTrend(
+            f.rate
+        );
+
+
+    const flightStatus =
+        getFlightStatus(
+            f
+        );
+
+
+    const status =
+        f.ground
+        ?
+        "NA ZIEMI"
+        :
+        "W POWIETRZU";
+
+
+    const statusColor =
+        f.ground
+        ?
+        "#f5a623"
+        :
+        "#26d07c";
+
+
+    const headingSource =
+        flightHistory.length >= 2
+        ?
+        "Niebieski tor lotu"
+        :
+        "ADS-B";
+
+
+    const nearestAirportName =
+        nearestAirport
+        ?
+        `${nearestAirport.airport.iata} • ${nearestAirport.airport.city}`
+        :
+        "—";
+
+
+    const nearestAirportDistance =
+        nearestAirport
+        ?
+        nearestAirport.distance.toFixed(1)
+        +
+        " km"
+        :
+        "—";
+
+
+    const airportZoneStatus =
+        f.groundAirport
+        ?
+        `W strefie ${f.groundAirport.iata} (${AIRPORT_GROUND_RADIUS_KM} km)`
+        :
+        "Poza strefą lotniska";
+
+
+    const airportZoneTime =
+        getAirportZoneTime(f);
+
+
+    const telemetry =
+        flightTelemetry.get(f.icao) || [];
+
+
+    const events =
+        flightEvents.get(f.icao) || [];
+
+
+    const highestAltitude =
+        telemetry
+        .map(sample => sample.alt)
+        .filter(Number.isFinite)
+        .reduce(
+            (max, altitude) => Math.max(max, altitude),
+            null
+        );
+
+
+    const highestSpeed =
+        telemetry
+        .map(sample => sample.speed)
+        .filter(Number.isFinite)
+        .reduce(
+            (max, speed) => Math.max(max, speed),
+            null
+        );
+
+
+    card.innerHTML = `
+
+        <button
+            class="close-card"
+            id="closeCard"
+        >
+            ×
+        </button>
+
+        <div class="plane-photo-container">
+
+            <div
+                class="photo-skeleton"
+                id="photoSkeleton"
+            ></div>
+
+            <img
+                id="planeImg"
+                alt="Samolot"
+                style="opacity:0;"
+            >
+
+            <div
+                class="plane-photo-caption"
+                id="photoCaption"
+            ></div>
+
+        </div>
+
+        <div class="card-inner">
+
+            <h2>
+
+                <span
+                    style="
+                        width:10px;
+                        height:10px;
+                        border-radius:50%;
+                        display:inline-block;
+                        background:${altColor};
+                        box-shadow:0 0 8px ${altColor};
+                    "
+                ></span>
+
+                ${escapeHtml(
+                    f.call ||
+                    "BRAK CALLSIGN"
+                )}
+
+            </h2>
+
+            <div class="muted">
+
+                ICAO24:
+                <b>
+                    ${escapeHtml(
+                        f.icao || "—"
+                    )}
+                </b>
+
+                •
+
+                Rejestracja:
+                <b>
+                    ${escapeHtml(
+                        f.reg || "—"
+                    )}
+                </b>
+
+            </div>
+
+
+            <div class="route-box">
+
+                🏢
+                ${escapeHtml(
+                    f.operator ||
+                    airline.name
+                )}
+
+                <br>
+
+                <span
+                    style="
+                        font-size:10px;
+                        color:#8ea7c3;
+                    "
+                >
+                    ${escapeHtml(
+                        airline.code
+                    )}
+                </span>
+
+            </div>
+
+
+            <div class="badge-row">
+
+                <div class="badge">
+                    ✈
+                    ${escapeHtml(
+                        f.type ||
+                        "UNKNOWN"
+                    )}
+                </div>
+
+                <div
+                    class="badge"
+                    style="
+                        color:${altColor};
+                        border-color:${altColor};
+                    "
+                >
+                    ${escapeHtml(
+                        category.name
+                    )}
+                </div>
+
+                <div
+                    class="badge"
+                    style="
+                        color:${statusColor};
+                        border-color:${statusColor};
+                    "
+                >
+                    ${status}
+                </div>
+
+            </div>
+
+
+            <div class="compass-wrap">
+
+                <div class="compass">
+
+                    ${compassSvg(
+                        heading
+                    )}
+
+                </div>
+
+                <div>
+
+                    <div class="compass-heading">
+
+                        ${
+                            heading !== null
+                            ?
+                            Math.round(
+                                heading
+                            )
+                            +
+                            "°"
+                            :
+                            "—"
+                        }
+
+                        <small>
+
+                            ${
+                                heading !== null
+                                ?
+                                getCompassDirection(
+                                    heading
+                                )
+                                :
+                                ""
+                            }
+
+                        </small>
+
+                    </div>
+
+                    <div class="compass-sub">
+
+                        ${
+                            headingSource
+                        }
+
+                    </div>
+
+                    <div class="compass-sub">
+
+                        ${
+                            flightTrend
+                        }
+
+                    </div>
+
+                    <div class="compass-sub">
+
+                        Ostatni kontakt:
+                        ${lastContact}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid">
+
+                <div class="stat">
+
+                    <small>
+                        Operator
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            f.operator ||
+                            airline.name ||
+                            "—"
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Producent
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            f.manufacturer ||
+                            "—"
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Model
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            f.model ||
+                            f.type ||
+                            "—"
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Wysokość
+                    </small>
+
+                    <b>
+                        ${altitudeFt}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Wysokość M
+                    </small>
+
+                    <b>
+                        ${altitudeM}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        V/S
+                    </small>
+
+                    <b>
+                        ${verticalFpm}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Prędkość
+                    </small>
+
+                    <b>
+                        ${speedKmh}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Węzły
+                    </small>
+
+                    <b>
+                        ${speedKts}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        MPH
+                    </small>
+
+                    <b>
+                        ${speedMph}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Latitude
+                    </small>
+
+                    <b>
+                        ${
+                            Number.isFinite(f.lat)
+                            ?
+                            f.lat.toFixed(5)
+                            +
+                            "°"
+                            :
+                            "—"
+                        }
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Longitude
+                    </small>
+
+                    <b>
+                        ${
+                            Number.isFinite(f.lon)
+                            ?
+                            f.lon.toFixed(5)
+                            +
+                            "°"
+                            :
+                            "—"
+                        }
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Squawk
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            f.squawk ||
+                            "—"
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Status lotu
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            flightStatus
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Kierunek
+                    </small>
+
+                    <b>
+                        ${
+                            heading !== null
+                            ?
+                            Math.round(
+                                heading
+                            )
+                            +
+                            "° "
+                            +
+                            getCompassDirection(
+                                heading
+                            )
+                            :
+                            "—"
+                        }
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Tor lotu
+                    </small>
+
+                    <b>
+                        ${
+                            travelledDistance > 0
+                            ?
+                            travelledDistance.toFixed(1)
+                            +
+                            " km"
+                            :
+                            "—"
+                        }
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Kontakt
+                    </small>
+
+                    <b>
+                        ${contactAge}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Źródło
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            f.source ||
+                            "ADS-B"
+                        )}
+                    </b>
+
+                </div>
+
+
+                <div class="stat">
+
+                    <small>
+                        Kategoria
+                    </small>
+
+                    <b>
+                        ${escapeHtml(
+                            category.name
+                        )}
+                    </b>
+
+                </div>
+
+
+            </div>
+
+
+            <div
+                class="info-box"
+                style="margin-top:10px;"
+            >
+
+                <b>
+                    🛬 Najbliższe lotnisko
+                </b>
+
+                <br><br>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Lotnisko
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${escapeHtml(
+                            nearestAirportName
+                        )}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Strefa lotniska
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${escapeHtml(airportZoneStatus)}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Czas w strefie
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${airportZoneTime}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Odległość
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${nearestAirportDistance}
+                    </span>
+
+                </div>
+
+                ${
+                    nearestAirport
+                    ?
+                    `
+                    <div class="nearest-row">
+
+                        <span>
+                            ICAO
+                        </span>
+
+                        <span class="nearest-dist">
+                            ${escapeHtml(
+                                nearestAirport.airport.icao
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="nearest-row">
+
+                        <span>
+                            IATA
+                        </span>
+
+                        <span class="nearest-dist">
+                            ${escapeHtml(
+                                nearestAirport.airport.iata
+                            )}
+                        </span>
+
+                    </div>
+
+                    <div class="nearest-row">
+
+                        <span>
+                            Wysokość
+                        </span>
+
+                        <span class="nearest-dist">
+                            ${escapeHtml(
+                                nearestAirport.airport.elev
+                            )}
+                        </span>
+
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+            </div>
+
+
+            <div
+                class="info-box"
+                style="margin-top:10px;"
+            >
+
+                <b>
+                    🕘 Historia tej sesji
+                </b>
+
+                <br><br>
+
+                <div class="nearest-row">
+
+                    <span>Obserwowany od</span>
+
+                    <span class="nearest-dist">
+                        ${getSessionDuration(f)}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>Najwyżej w sesji</span>
+
+                    <span class="nearest-dist">
+                        ${Number.isFinite(highestAltitude) ? Math.round(highestAltitude).toLocaleString("pl-PL") + " m" : "—"}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>Najszybciej w sesji</span>
+
+                    <span class="nearest-dist">
+                        ${Number.isFinite(highestSpeed) ? Math.round(highestSpeed * 3.6) + " km/h" : "—"}
+                    </span>
+
+                </div>
+
+                ${
+                    events.length
+                    ?
+                    events.slice(-4).reverse().map(event => `
+                        <div class="nearest-row">
+                            <span>${escapeHtml(event.label)}</span>
+                            <span class="nearest-dist">${new Date(event.time).toLocaleTimeString("pl-PL")}</span>
+                        </div>
+                    `).join("")
+                    :
+                    `<div class="nearest-row"><span>Brak zapisanych zdarzeń</span><span class="nearest-dist">—</span></div>`
+                }
+
+                <div class="muted" style="margin:10px 0 0;">
+                    Historia jest zapisywana lokalnie od otwarcia radaru.
+                </div>
+
+            </div>
+
+
+            <div
+                class="info-box"
+                style="margin-top:10px;"
+            >
+
+                <b>
+                    📡 Dane ADS-B
+                </b>
+
+                <br><br>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Ostatni kontakt
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${lastContact}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Wiek danych
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${contactAge}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Vertical rate
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${verticalMs}
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Heading
+                    </span>
+
+                    <span class="nearest-dist">
+
+                        ${
+                            heading !== null
+                            ?
+                            Math.round(
+                                heading
+                            )
+                            +
+                            "°"
+                            :
+                            "—"
+                        }
+
+                    </span>
+
+                </div>
+
+                <div class="nearest-row">
+
+                    <span>
+                        Źródło kierunku
+                    </span>
+
+                    <span class="nearest-dist">
+                        ${headingSource}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="info-box"
+                style="margin-top:10px;"
+            >
+
+                <b>
+                    📍 Najbliższe lotniska
+                </b>
+
+                <br><br>
+
+                ${
+                    nearest
+                    .map(
+                        item =>
+                            `
+                            <div class="nearest-row">
+
+                                <span>
+
+                                    ${escapeHtml(
+                                        item.airport.iata
+                                    )}
+
+                                    •
+
+                                    ${escapeHtml(
+                                        item.airport.city
+                                    )}
+
+                                </span>
+
+                                <span class="nearest-dist">
+
+                                    ${item.distance.toFixed(1)}
+                                    km
+
+                                </span>
+
+                            </div>
+                            `
+                    )
+                    .join("")
+                }
+
+            </div>
+
+        </div>
+    `;
+
+
+    document
+        .getElementById(
+            "closeCard"
+        )
+        .onclick =
+            () =>
+                closeCard();
+
+
+    const currentIcao =
+        f.icao;
+
+
+    const photo =
+        await fetchAircraftPhoto(
+            f.reg,
+            f.icao
+        );
+
+
+    if(
+        !selected ||
+        selected.icao !== currentIcao
+    )
+        return;
+
+
+    const img =
+        document.getElementById(
+            "planeImg"
+        );
+
+
+    const caption =
+        document.getElementById(
+            "photoCaption"
+        );
+
+
+    const skeleton =
+        document.getElementById(
+            "photoSkeleton"
+        );
+
+
+    if(img){
+
+        img.onload = () => {
+
+            img.style.opacity =
+                "1";
+
+            skeleton?.remove();
+
+        };
+
+
+        img.src =
+            photo.url;
+
+    }
+
+
+    if(caption){
+
+        caption.textContent =
+            "📷 " +
+            photo.title;
+
+    }
+
+}
+
+
+/* =========================================================
+   SELECTED CLASS
+========================================================= */
+
+function removeSelectedClass(){
+
+    for(
+        const entry
+        of markers.values()
+    ){
+
+        entry
+            .marker
+            .getElement()
+            ?.classList
+            .remove(
+                "selected"
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   FILTROWANIE
+========================================================= */
+
+function getFilteredFlights(){
+
+    const query =
+        document
+        .getElementById(
+            "search"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const onlyAirborne =
+        document
+        .getElementById(
+            "airborne"
+        )
+        .checked;
+
+
+    return flights.filter(
+        f => {
+
+            if(
+                onlyAirborne &&
+                f.ground
+            )
+                return false;
+
+
+            if(!query)
+                return true;
+
+
+            const airline =
+                getAirline(
+                    f.call
+                );
+
+
+            const searchable =
+                [
+                    f.call,
+                    f.icao,
+                    f.reg,
+                    f.type,
+                    f.model,
+                    f.operator,
+                    f.manufacturer,
+                    f.country,
+                    airline.name
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+            return searchable.includes(
+                query
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LISTA LOTÓW
+========================================================= */
+
+function renderFlightList(){
+
+    const listEl =
+        document.getElementById(
+            "flightList"
+        );
+
+
+    const q =
+        document
+        .getElementById(
+            "listSearch"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    let list =
+        getFilteredFlights();
+
+
+    if(q){
+
+        list =
+            list.filter(
+                f => {
+
+                    const airline =
+                        getAirline(
+                            f.call
+                        );
+
+
+                    const text =
+                        [
+                            f.call,
+                            f.icao,
+                            f.reg,
+                            f.type,
+                            airline.name
+                        ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase();
+
+
+                    return text.includes(
+                        q
+                    );
+
+                }
+            );
+
+    }
+
+
+    list =
+        list
+        .slice()
+        .sort(
+            (a,b) =>
+                (b.alt || 0) -
+                (a.alt || 0)
+        );
+
+
+    if(!list.length){
+
+        listEl.innerHTML =
+            `
+            <div class="list-empty">
+                Brak lotów spełniających kryteria
+            </div>
+            `;
+
+
+        return;
+
+    }
+
+
+    listEl.innerHTML =
+        list
+        .slice(
+            0,
+            150
+        )
+        .map(
+            f => {
+
+                const color =
+                    getAltitudeColor(
+                        f.alt,
+                        f.ground
+                    );
+
+
+                const airline =
+                    getAirline(
+                        f.call
+                    );
+
+
+                const altFt =
+                    Number.isFinite(f.alt)
+                    ?
+                    Math.round(
+                        f.alt * 3.28084
+                    )
+                    .toLocaleString(
+                        "pl-PL"
+                    )
+                    +
+                    " ft"
+                    :
+                    "—";
+
+
+                const spdKmh =
+                    Number.isFinite(f.speed)
+                    ?
+                    Math.round(
+                        f.speed * 3.6
+                    )
+                    +
+                    " km/h"
+                    :
+                    "—";
+
+
+                const isSel =
+                    selected &&
+                    selected.icao ===
+                    f.icao;
+
+
+                return `
+
+                    <div
+                        class="flight-row ${
+                            isSel
+                            ?
+                            "selected"
+                            :
+                            ""
+                        }"
+                        data-flight-id="${escapeHtml(
+                            f.icao
+                        )}"
+                    >
+
+                        <span
+                            class="flight-row-dot"
+                            style="
+                                background:${color};
+                                color:${color};
+                            "
+                        ></span>
+
+                        <div class="flight-row-main">
+
+                            <div class="flight-row-call">
+
+                                ${escapeHtml(
+                                    f.call ||
+                                    f.icao ||
+                                    "—"
+                                )}
+
+                            </div>
+
+                            <div class="flight-row-sub">
+
+                                ${escapeHtml(
+                                    airline.name
+                                )}
+
+                                ${
+                                    f.reg
+                                    ?
+                                    " • " +
+                                    escapeHtml(
+                                        f.reg
+                                    )
+                                    :
+                                    ""
+                                }
+
+                            </div>
+
+                        </div>
+
+                        <div class="flight-row-alt">
+
+                            ${altFt}
+
+                            <small>
+                                ${spdKmh}
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+
+    listEl
+        .querySelectorAll(
+            "[data-flight-id]"
+        )
+        .forEach(
+            el => {
+
+                el.onclick = () => {
+
+                    const flight =
+                        flights.find(
+                            f =>
+                                f.icao ===
+                                el.dataset.flightId
+                        );
+
+
+                    if(flight)
+                        showFlight(
+                            flight
+                        );
+
+                };
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   AUTOCOMPLETE
+========================================================= */
+
+function renderSuggestions(){
+
+    const box =
+        document.getElementById(
+            "suggestBox"
+        );
+
+
+    const q =
+        document
+        .getElementById(
+            "search"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    if(!q){
+
+        box.classList.remove(
+            "show"
+        );
+
+        box.innerHTML =
+            "";
+
+        return;
+
+    }
+
+
+    const matches =
+        flights
+
+        .filter(
+            f => {
+
+                const airline =
+                    getAirline(
+                        f.call
+                    );
+
+
+                const text =
+                    [
+                        f.call,
+                        f.icao,
+                        f.reg,
+                        f.type,
+                        airline.name
+                    ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+
+                return text.includes(
+                    q
+                );
+
+            }
+        )
+
+        .slice(
+            0,
+            8
+        );
+
+
+    if(!matches.length){
+
+        box.classList.remove(
+            "show"
+        );
+
+        box.innerHTML =
+            "";
+
+        return;
+
+    }
+
+
+    box.innerHTML =
+        matches
+        .map(
+            f => {
+
+                const airline =
+                    getAirline(
+                        f.call
+                    );
+
+
+                return `
+
+                    <div
+                        class="suggest-row"
+                        data-flight-id="${escapeHtml(
+                            f.icao
+                        )}"
+                    >
+
+                        <span>
+
+                            <b>
+                                ${escapeHtml(
+                                    f.call ||
+                                    f.icao
+                                )}
+                            </b>
+
+                            <span class="s-muted">
+
+                                ${escapeHtml(
+                                    airline.name
+                                )}
+
+                            </span>
+
+                        </span>
+
+                        <span class="s-muted">
+
+                            ${escapeHtml(
+                                f.reg || ""
+                            )}
+
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+
+    box.classList.add(
+        "show"
+    );
+
+
+    box
+        .querySelectorAll(
+            "[data-flight-id]"
+        )
+        .forEach(
+            el => {
+
+                el.onclick = () => {
+
+                    const flight =
+                        flights.find(
+                            f =>
+                                f.icao ===
+                                el.dataset.flightId
+                        );
+
+
+                    if(flight){
+
+                        showFlight(
+                            flight
+                        );
+
+
+                        box.classList.remove(
+                            "show"
+                        );
+
+                    }
+
+                };
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   RENDER SAMOLOTÓW
+========================================================= */
+
+function render(){
+
+    /*
+        NAJWAŻNIEJSZE:
+
+        Najpierw zapisujemy pozycję każdego
+        samolotu do jego własnej historii.
+    */
+
+    updateAllFlightHistories();
+
+
+    /*
+        Potem rysujemy wszystkie niebieskie trasy.
+    */
+
+    renderAllFlightPaths();
+
+
+    renderAirports();
+
+
+    const visible =
+        getFilteredFlights();
+
+
+    document
+        .getElementById(
+            "count"
+        )
+        .textContent =
+            visible.length
+            .toLocaleString(
+                "pl-PL"
+            );
+
+
+    const used =
+        new Set();
+
+
+    const showLabels =
+        document
+        .getElementById(
+            "labels"
+        )
+        .checked;
+
+
+    for(
+        const f
+        of visible
+    ){
+
+        if(
+            !Number.isFinite(f.lat) ||
+            !Number.isFinite(f.lon)
+        )
+            continue;
+
+
+        const id =
+            f.icao ||
+            `${f.lat}:${f.lon}`;
+
+
+        used.add(
+            id
+        );
+
+
+        const color =
+            getAltitudeColor(
+                f.alt,
+                f.ground
+            );
+
+
+        /*
+            TERAZ KAŻDY SAMOLOT
+            dostaje kierunek z własnej historii.
+
+            Nie tylko selected.
+        */
+
+        const movementHeading =
+            getFlightDirection(
+                f
+            );
+
+
+        const rotation =
+            getPlaneRotation(
+                movementHeading
+            );
+
+
+        const headingText =
+            movementHeading !== null
+            ?
+            Math.round(
+                movementHeading
+            )
+            +
+            "° "
+            +
+            getCompassDirection(
+                movementHeading
+            )
+            :
+            "Brak kierunku";
+
+
+        const html = `
+
+            <div
+                class="plane-icon-svg"
+                style="
+                    transform:rotate(
+                        ${rotation}deg
+                    );
+                "
+                title="${headingText}"
+            >
+
+                ${getPlaneSvg(
+                    color
+                )}
+
+            </div>
+
+            ${
+                showLabels &&
+                f.call
+                ?
+                `
+                <div class="flight-label">
+
+                    ${escapeHtml(
+                        f.call
+                    )}
+
+                    ${
+                        f.reg
+                        ?
+                        ` (${escapeHtml(f.reg)})`
+                        :
+                        ""
+                    }
+
+                </div>
+                `
+                :
+                ""
+            }
+
+        `;
+
+
+        let entry =
+            markers.get(
+                id
+            );
+
+
+        if(!entry){
+
+            const icon =
+                L.divIcon({
+
+                    className:
+                        "plane-marker",
+
+                    iconSize:
+                        [44,44],
+
+                    iconAnchor:
+                        [22,22],
+
+                    html
+
+                });
+
+
+            const marker =
+                L.marker(
+                    [
+                        f.lat,
+                        f.lon
+                    ],
+                    {
+                        icon,
+
+                        keyboard:false,
+
+                        zIndexOffset:500
+                    }
+                );
+
+
+            marker.on(
+                "click",
+                () =>
+                    showFlight(
+                        f
+                    )
+            );
+
+
+            marker.addTo(
+                map
+            );
+
+
+            entry = {
+
+                marker,
+
+                cur:[
+                    f.lat,
+                    f.lon
+                ],
+
+                target:[
+                    f.lat,
+                    f.lon
+                ],
+
+                data:f
+
+            };
+
+
+            markers.set(
+                id,
+                entry
+            );
+
+
+        }else{
+
+            entry.target = [
+                f.lat,
+                f.lon
+            ];
+
+
+            entry.data =
+                f;
+
+
+            const element =
+                entry
+                .marker
+                .getElement();
+
+
+            if(element){
+
+                const plane =
+                    element.querySelector(
+                        ".plane-icon-svg"
+                    );
+
+
+                if(plane){
+
+                    plane.style.transform =
+                        `rotate(${rotation}deg)`;
+
+
+                    plane.title =
+                        headingText;
+
+
+                    const svg =
+                        plane.querySelector(
+                            "svg"
+                        );
+
+
+                    if(svg){
+
+                        svg.setAttribute(
+                            "fill",
+                            color
+                        );
+
+                    }
+
+                }
+
+
+                let label =
+                    element.querySelector(
+                        ".flight-label"
+                    );
+
+
+                if(
+                    showLabels &&
+                    f.call
+                ){
+
+                    if(!label){
+
+                        label =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        label.className =
+                            "flight-label";
+
+
+                        element.appendChild(
+                            label
+                        );
+
+                    }
+
+
+                    label.textContent =
+                        f.call +
+                        (
+                            f.reg
+                            ?
+                            ` (${f.reg})`
+                            :
+                            ""
+                        );
+
+
+                }else if(label){
+
+                    label.remove();
+
+                }
+
+            }
+
+        }
+
+
+        if(
+            selected &&
+            selected.icao ===
+            f.icao
+        ){
+
+            entry
+                .marker
+                .getElement()
+                ?.classList
+                .add(
+                    "selected"
+                );
+
+        }
+
+    }
+
+
+    /*
+        Usuwamy markery, których nie ma
+        w aktualnym filtrowanym widoku.
+    */
+
+    for(
+        const [
+            id,
+            entry
+        ]
+        of markers
+    ){
+
+        if(
+            !used.has(
+                id
+            )
+        ){
+
+            map.removeLayer(
+                entry.marker
+            );
+
+
+            markers.delete(
+                id
+            );
+
+        }
+
+    }
+
+
+    /*
+        Aktualizacja wybranego lotu.
+    */
+
+    if(selected){
+
+        const current =
+            flights.find(
+                f =>
+                    f.icao ===
+                    selected.icao
+            );
+
+
+        if(current){
+
+            selected =
+                current;
+
+
+            /*
+                Podpinamy flightHistory
+                do historii tego konkretnego ICAO.
+            */
+
+            flightHistory =
+                flightHistories.get(
+                    current.icao
+                )
+                ||
+                [];
+
+
+            /*
+                Tor wszystkich samolotów
+                jest już zaktualizowany.
+            */
+
+            renderAllFlightPaths();
+
+
+            const liveHeading =
+                getFlightDirection(
+                    current
+                );
+
+
+            const liveEntry =
+                markers.get(
+                    current.icao
+                );
+
+
+            if(liveEntry){
+
+                const element =
+                    liveEntry
+                    .marker
+                    .getElement();
+
+
+                if(element){
+
+                    const plane =
+                        element.querySelector(
+                            ".plane-icon-svg"
+                        );
+
+
+                    if(plane){
+
+                        plane.style.transform =
+                            `
+                            rotate(
+                                ${getPlaneRotation(
+                                    liveHeading
+                                )}deg
+                            )
+                            `;
+
+                    }
+
+                }
+
+            }
+
+
+            updateLiveCard(
+                current
+            );
+
+
+            if(
+                followMode &&
+                document
+                    .getElementById(
+                        "autoFollow"
+                    )
+                    .checked
+            ){
+
+                map.panTo(
+                    [
+                        current.lat,
+                        current.lon
+                    ],
+                    {
+                        animate:true,
+                        duration:.4
+                    }
+                );
+
+            }
+
+        }
+
+    }
+
+
+    renderFlightList();
+
+}
+
+
+/* =========================================================
+   PŁYNNA ANIMACJA
+========================================================= */
+
+function animateMarkers(){
+
+    const smooth =
+        document
+        .getElementById(
+            "smoothMotion"
+        )
+        .checked;
+
+
+    if(smooth){
+
+        for(
+            const entry
+            of markers.values()
+        ){
+
+            const dLat =
+                entry.target[0] -
+                entry.cur[0];
+
+
+            const dLon =
+                entry.target[1] -
+                entry.cur[1];
+
+
+            if(
+                Math.abs(dLat) > 1e-7 ||
+                Math.abs(dLon) > 1e-7
+            ){
+
+                entry.cur[0] +=
+                    dLat * 0.06;
+
+
+                entry.cur[1] +=
+                    dLon * 0.06;
+
+
+                entry.marker.setLatLng(
+                    entry.cur
+                );
+
+            }
+
+        }
+
+    }else{
+
+        for(
+            const entry
+            of markers.values()
+        ){
+
+            entry.cur =
+                entry.target.slice();
+
+
+            entry.marker.setLatLng(
+                entry.cur
+            );
+
+        }
+
+    }
+
+
+    requestAnimationFrame(
+        animateMarkers
+    );
+
+}
+
+
+requestAnimationFrame(
+    animateMarkers
+);
+
+
+/* =========================================================
+   LIVE CARD
+========================================================= */
+
+function updateLiveCard(f){
+
+    const card =
+        document.getElementById(
+            "card"
+        );
+
+
+    if(
+        card.classList.contains(
+            "hidden"
+        )
+    )
+        return;
+
+
+    /*
+        Ustawiamy historię konkretnego ICAO.
+    */
+
+    flightHistory =
+        flightHistories.get(
+            f.icao
+        )
+        ||
+        [];
+
+
+    const heading =
+        getFlightDirection(
+            f
+        );
+
+
+    const stats =
+        card.querySelectorAll(
+            ".stat b"
+        );
+
+
+    if(
+        stats.length >= 12
+    ){
+
+        stats[3].textContent =
+            Number.isFinite(f.alt)
+            ?
+            Math.round(
+                f.alt * 3.28084
+            )
+            .toLocaleString(
+                "pl-PL"
+            )
+            +
+            " ft"
+            :
+            "—";
+
+
+        stats[4].textContent =
+            Number.isFinite(f.alt)
+            ?
+            Math.round(
+                f.alt
+            )
+            +
+            " m"
+            :
+            "—";
+
+
+        stats[5].textContent =
+            Number.isFinite(f.rate)
+            ?
+            (
+                f.rate > 0
+                ?
+                "+"
+                :
+                ""
+            )
+            +
+            Math.round(
+                f.rate * 196.85
+            )
+            +
+            " ft/min"
+            :
+            "—";
+
+
+        stats[6].textContent =
+            Number.isFinite(f.speed)
+            ?
+            Math.round(
+                f.speed * 3.6
+            )
+            +
+            " km/h"
+            :
+            "—";
+
+
+        stats[7].textContent =
+            Number.isFinite(f.speed)
+            ?
+            Math.round(
+                f.speed * 1.94384
+            )
+            +
+            " kt"
+            :
+            "—";
+
+
+        stats[8].textContent =
+            Number.isFinite(f.speed)
+            ?
+            Math.round(
+                f.speed * 2.23694
+            )
+            +
+            " mph"
+            :
+            "—";
+
+
+        stats[9].textContent =
+            Number.isFinite(f.lat)
+            ?
+            f.lat.toFixed(5)
+            +
+            "°"
+            :
+            "—";
+
+
+        stats[10].textContent =
+            Number.isFinite(f.lon)
+            ?
+            f.lon.toFixed(5)
+            +
+            "°"
+            :
+            "—";
+
+
+        stats[11].textContent =
+            f.squawk ||
+            "—";
+
+
+        if(stats[12])
+            stats[12].textContent =
+                getFlightStatus(
+                    f
+                );
+
+
+        if(stats[13])
+            stats[13].textContent =
+                heading !== null
+                ?
+                Math.round(
+                    heading
+                )
+                +
+                "° "
+                +
+                getCompassDirection(
+                    heading
+                )
+                :
+                "—";
+
+
+        if(stats[14])
+            stats[14].textContent =
+                getFlightDistance() > 0
+                ?
+                getFlightDistance()
+                    .toFixed(1)
+                +
+                " km"
+                :
+                "—";
+
+
+        if(stats[15])
+            stats[15].textContent =
+                getContactAge(
+                    f.lastContact
+                );
+
+    }
+
+
+    const headingEl =
+        card.querySelector(
+            ".compass-heading"
+        );
+
+
+    if(headingEl){
+
+        headingEl.innerHTML =
+            `
+            ${
+                heading !== null
+                ?
+                Math.round(
+                    heading
+                )
+                +
+                "°"
+                :
+                "—"
+            }
+
+            <small>
+
+                ${
+                    heading !== null
+                    ?
+                    getCompassDirection(
+                        heading
+                    )
+                    :
+                    ""
+                }
+
+            </small>
+            `;
+
+    }
+
+
+    const needle =
+        card.querySelector(
+            ".compass-needle"
+        );
+
+
+    if(
+        needle &&
+        heading !== null
+    ){
+
+        needle.style.transform =
+            `rotate(${heading}deg)`;
+
+    }
+
+
+    const compassSubs =
+        card.querySelectorAll(
+            ".compass-sub"
+        );
+
+
+    if(
+        compassSubs.length >= 2
+    ){
+
+        compassSubs[0].textContent =
+            flightHistory.length >= 2
+            ?
+            "Niebieski tor lotu"
+            :
+            "ADS-B";
+
+
+        compassSubs[1].textContent =
+            getFlightTrend(
+                f.rate
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   ŁADOWANIE DANYCH
+========================================================= */
+
+async function load(){
+
+    const btn =
+        document.getElementById(
+            "refreshBtn"
+        );
+
+
+    btn.classList.add(
+        "spin"
+    );
+
+
+    setStatus(
+        "Pobieranie danych ADS-B...",
+        ""
+    );
+
+
+    try{
+
+        /*
+            Adres geograficzny środka Polski i promień (250 nm to
+            maksimum, jakie akceptuje ten publiczny endpoint) —
+            dzięki temu strona nie potrzebuje żadnego własnego
+            backendu / serwera i działa np. z samego GitHub Pages.
+        */
+        const response =
+            await fetch(
+                "https://api.adsb.lol/v2/point/51.92/19.15/250?t=" +
+                Date.now(),
+                {
+                    cache:"no-store"
+                }
+            );
+
+
+        if(!response.ok)
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+
+        const raw =
+            await response.json();
+
+
+        /*
+            Publiczne API adsb.lol zwraca dane w innym formacie
+            (pole "ac") niż oryginalnie zakładany backend, więc
+            tłumaczymy je na strukturę, jakiej oczekuje reszta
+            kodu poniżej (icao24, callsign, altitude, heading...).
+        */
+        const data = {
+
+            ok:true,
+
+            flights:
+                (raw.ac || [])
+
+                .map(
+                    ac => ({
+
+                        icao24:
+                            ac.hex,
+
+                        callsign:
+                            (ac.flight || "")
+                            .trim(),
+
+                        reg:
+                            ac.r,
+
+                        type:
+                            ac.t,
+
+                        model:
+                            ac.desc,
+
+                        manufacturer:
+                            null,
+
+                        operator:
+                            ac.ownOp,
+
+                        country:
+                            null,
+
+                        lat:
+                            ac.lat,
+
+                        lon:
+                            ac.lon,
+
+                        altitude:
+                            ac.alt_baro,
+
+                        speed:
+                            ac.gs,
+
+                        heading:
+                            ac.track,
+
+                        vertical_rate:
+                            ac.baro_rate,
+
+                        squawk:
+                            ac.squawk,
+
+                        category:
+                            ac.category,
+
+                        last_contact:
+                            Math.floor(
+                                Date.now() / 1000
+                                -
+                                (
+                                    toNumber(ac.seen) ??
+                                    0
+                                )
+                            ),
+
+                        source:
+                            "adsb.lol"
+
+                    })
+                )
+
+        };
+
+
+        if(!data.ok)
+            throw new Error(
+                data.error ||
+                "API error"
+            );
+
+
+        flights =
+            (data.flights || [])
+
+            .map(
+                item => ({
+
+                    icao:
+                        item.icao24,
+
+                    call:
+                        item.callsign,
+
+                    reg:
+                        item.reg,
+
+                    type:
+                        item.type,
+
+                    model:
+                        item.model,
+
+                    manufacturer:
+                        item.manufacturer,
+
+                    operator:
+                        item.operator,
+
+                    country:
+                        item.country,
+
+                    lat:
+                        toNumber(
+                            item.lat
+                        ),
+
+                    lon:
+                        toNumber(
+                            item.lon
+                        ),
+
+                    alt:
+                        feetToMeters(
+                            item.altitude
+                        ),
+
+                    sourceGround:
+                        isGroundAltitude(
+                            item.altitude
+                        ),
+
+                    ground:false,
+
+                    speed:
+                        knotsToMetersPerSecond(
+                            item.speed
+                        ),
+
+                    track:
+                        normalizeHeading(
+                            item.heading ??
+                            item.track
+                        ),
+
+                    rate:
+                        feetPerMinuteToMetersPerSecond(
+                            item.vertical_rate
+                        ),
+
+                    squawk:
+                        item.squawk,
+
+                    category:
+                        item.category,
+
+                    lastContact:
+                        toNumber(
+                            item.last_contact
+                        ),
+
+                    source:
+                        item.source ||
+                        "ADS-B"
+
+                })
+            )
+
+            .filter(
+                f =>
+                    Number.isFinite(f.lat) &&
+                    Number.isFinite(f.lon)
+            );
+
+
+        lastLoadTime =
+            new Date();
+
+
+        updateAirportGroundStatuses();
+
+
+        updateFlightTelemetry();
+
+
+        setStatus(
+            "ONLINE • " +
+            flights.length
+                .toLocaleString(
+                    "pl-PL"
+                ) +
+            " samolotów • " +
+            lastLoadTime
+                .toLocaleTimeString(
+                    "pl-PL"
+                ),
+            "ok"
+        );
+
+
+        /*
+            Tutaj render() zapisuje pozycję
+            KAŻDEGO samolotu.
+        */
+
+        render();
+
+
+    }catch(error){
+
+        console.error(
+            "FLIGHT RADAR:",
+            error
+        );
+
+
+        setStatus(
+            "Błąd: " +
+            error.message,
+            "err"
+        );
+
+
+        showToast(
+            "Nie udało się pobrać danych lotów"
+        );
+
+
+    }finally{
+
+        setTimeout(
+            () =>
+                btn.classList.remove(
+                    "spin"
+                ),
+            400
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+    text,
+    type=""
+){
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent =
+            text;
+
+
+    document
+        .getElementById(
+            "dot"
+        )
+        .className =
+            "dot " +
+            type;
+
+}
+
+
+function showToast(text){
+
+    const wrap =
+        document.getElementById(
+            "toastWrap"
+        );
+
+
+    const el =
+        document.createElement(
+            "div"
+        );
+
+
+    el.className =
+        "toast";
+
+
+    el.innerHTML =
+        `
+        ⚠
+        ${escapeHtml(text)}
+        `;
+
+
+    wrap.appendChild(
+        el
+    );
+
+
+    setTimeout(
+        () => {
+
+            el.style.transition =
+                "opacity .3s";
+
+
+            el.style.opacity =
+                "0";
+
+
+            setTimeout(
+                () =>
+                    el.remove(),
+                300
+            );
+
+        },
+        3500
+    );
+
+}
+
+
+/* =========================================================
+   TABY SIDEBARA
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".sidebar-tab"
+    )
+    .forEach(
+        tab => {
+
+            tab.onclick = () => {
+
+                document
+                    .querySelectorAll(
+                        ".sidebar-tab"
+                    )
+                    .forEach(
+                        t =>
+                            t.classList
+                            .remove(
+                                "active"
+                            )
+                    );
+
+
+                document
+                    .querySelectorAll(
+                        ".sidebar-pane"
+                    )
+                    .forEach(
+                        p =>
+                            p.classList
+                            .remove(
+                                "active"
+                            )
+                    );
+
+
+                tab.classList.add(
+                    "active"
+                );
+
+
+                document
+                    .getElementById(
+                        tab.dataset.tab ===
+                        "filters"
+                        ?
+                        "paneFilters"
+                        :
+                        "paneList"
+                    )
+                    .classList
+                    .add(
+                        "active"
+                    );
+
+
+                if(
+                    tab.dataset.tab ===
+                    "list"
+                )
+                    renderFlightList();
+
+            };
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "listSearch"
+    )
+    .addEventListener(
+        "input",
+        renderFlightList
+    );
+
+
+/* =========================================================
+   SZUKANIE
+========================================================= */
+
+const searchInput =
+    document.getElementById(
+        "search"
+    );
+
+
+searchInput.addEventListener(
+    "input",
+    function(){
+
+        render();
+
+        renderSuggestions();
+
+    }
+);
+
+
+searchInput.addEventListener(
+    "focus",
+    renderSuggestions
+);
+
+
+document.addEventListener(
+    "click",
+    e => {
+
+        if(
+            !e.target.closest(
+                ".search-wrap"
+            )
+        ){
+
+            document
+                .getElementById(
+                    "suggestBox"
+                )
+                .classList
+                .remove(
+                    "show"
+                );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   BUTTONY
+========================================================= */
+
+document
+    .getElementById(
+        "refreshBtn"
+    )
+    .onclick =
+        load;
+
+
+document
+    .getElementById(
+        "airborne"
+    )
+    .onchange =
+        render;
+
+
+document
+    .getElementById(
+        "labels"
+    )
+    .onchange =
+        render;
+
+
+document
+    .getElementById(
+        "showAirports"
+    )
+    .onchange =
+        render;
+
+
+/* =========================================================
+   NAZWY MIAST NA MAPIE
+========================================================= */
+
+function applyCityLabelsSetting(){
+
+    const show =
+        document
+        .getElementById(
+            "cityLabels"
+        )
+        .checked;
+
+
+    document.body.classList.toggle(
+        "hide-city-labels",
+        !show
+    );
+
+}
+
+
+document
+    .getElementById(
+        "cityLabels"
+    )
+    .onchange =
+        applyCityLabelsSetting;
+
+
+/* =========================================================
+   ROUTE TOGGLE
+========================================================= */
+
+document
+    .getElementById(
+        "showRoute"
+    )
+    .onchange =
+        () => {
+
+            /*
+                Teraz przełącznik steruje
+                WSZYSTKIMI liniami, a nie tylko
+                wybranym samolotem.
+            */
+
+            renderAllFlightPaths();
+
+        };
+
+
+/* =========================================================
+   AUTO FOLLOW
+========================================================= */
+
+document
+    .getElementById(
+        "autoFollow"
+    )
+    .onchange =
+        function(){
+
+            if(!this.checked){
+
+                followMode = false;
+
+
+                document
+                    .getElementById(
+                        "followIndicator"
+                    )
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+            }else if(selected){
+
+                followMode = true;
+
+
+                document
+                    .getElementById(
+                        "followIndicator"
+                    )
+                    .classList
+                    .remove(
+                        "hidden"
+                    );
+
+            }
+
+        };
+
+
+/* =========================================================
+   MAPA / SATELITA
+========================================================= */
+
+document
+    .getElementById(
+        "radarBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                map.hasLayer(
+                    satelliteLayer
+                )
+            )
+                map.removeLayer(
+                    satelliteLayer
+                );
+
+
+            if(
+                !map.hasLayer(
+                    radarLayer
+                )
+            )
+                radarLayer.addTo(
+                    map
+                );
+
+
+            this.classList.add(
+                "active"
+            );
+
+
+            document
+                .getElementById(
+                    "satBtn"
+                )
+                .classList
+                .remove(
+                    "active"
+                );
+
+        };
+
+
+document
+    .getElementById(
+        "satBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                map.hasLayer(
+                    radarLayer
+                )
+            )
+                map.removeLayer(
+                    radarLayer
+                );
+
+
+            if(
+                !map.hasLayer(
+                    satelliteLayer
+                )
+            )
+                satelliteLayer.addTo(
+                    map
+                );
+
+
+            this.classList.add(
+                "active"
+            );
+
+
+            document
+                .getElementById(
+                    "radarBtn"
+                )
+                .classList
+                .remove(
+                    "active"
+                );
+
+        };
+
+
+/* =========================================================
+   GEOLOKALIZACJA
+========================================================= */
+
+document
+    .getElementById(
+        "locateBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                !navigator.geolocation
+            ){
+
+                showToast(
+                    "Geolokalizacja niedostępna"
+                );
+
+                return;
+
+            }
+
+
+            navigator
+                .geolocation
+                .getCurrentPosition(
+
+                    position => {
+
+                        const lat =
+                            position.coords
+                            .latitude;
+
+
+                        const lon =
+                            position.coords
+                            .longitude;
+
+
+                        L.circleMarker(
+                            [
+                                lat,
+                                lon
+                            ],
+                            {
+                                radius:9,
+
+                                color:"#25c7ff",
+
+                                fillColor:"#25c7ff",
+
+                                fillOpacity:.9,
+
+                                weight:3
+                            }
+                        ).addTo(
+                            map
+                        );
+
+
+                        map.flyTo(
+                            [
+                                lat,
+                                lon
+                            ],
+                            9,
+                            {
+                                duration:.8
+                            }
+                        );
+
+                    },
+
+
+                    () =>
+                        showToast(
+                            "Nie udało się pobrać pozycji"
+                        )
+
+                );
+
+        };
+
+
+/* =========================================================
+   MAP DRAG
+========================================================= */
+
+map.on(
+    "dragstart",
+    () => {
+
+        if(selected){
+
+            followMode = false;
+
+
+            document
+                .getElementById(
+                    "followIndicator"
+                )
+                .classList
+                .add(
+                    "hidden"
+                );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   KLAWIATURA
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        )
+            closeCard();
+
+
+        if(
+            event.key.toLowerCase() ===
+            "r" &&
+            event.target.tagName !==
+            "INPUT"
+        )
+            load();
+
+    }
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+renderAirports();
+
+applyCityLabelsSetting();
+
+
+/*
+    Pierwsze pobranie od razu tworzy
+    pierwsze punkty historii.
+*/
+
+load();
+
+
+/*
+    Co 10 sekund:
+
+    1. pobieramy nowe ADS-B,
+    2. zapisujemy pozycje każdego ICAO,
+    3. aktualizujemy niebieskie linie,
+    4. aktualizujemy kierunki samolotów.
+*/
+
+setInterval(
+    load,
+    5000
+);
+
+</script>
+
+</body>
+</html>
