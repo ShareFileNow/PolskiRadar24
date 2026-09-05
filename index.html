@@ -277,12 +277,47 @@ body{
     backdrop-filter:blur(14px);
     box-shadow:0 12px 40px rgba(0,0,0,.6);
     overflow:hidden;
+    transition:transform .25s ease, opacity .25s ease;
+}
+
+.sidebar.hidden-sidebar{
+    display:none !important;
+}
+
+.sidebar-header{
+    position:relative;
+    flex-shrink:0;
+}
+
+.sidebar-close{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#0d1e37;
+    border:1px solid var(--panel-b);
+    color:var(--text);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    z-index:5;
+    line-height:1;
+}
+
+.sidebar-close:hover{
+    background:#17335a;
+    border-color:var(--accent);
 }
 
 .sidebar-tabs{
     display:flex;
     border-bottom:1px solid var(--panel-b);
     flex-shrink:0;
+    padding-right:36px;
 }
 
 .sidebar-tab{
@@ -1050,7 +1085,31 @@ body.hide-city-labels .airport-label{
 @media(max-width:900px){
 
     .sidebar{
-        display:none;
+        top:0;
+        left:0;
+        right:0;
+        bottom:0;
+        width:100%;
+        max-width:100%;
+        border-radius:0;
+        z-index:2000;
+        transform:translateX(-100%);
+        opacity:0;
+        pointer-events:none;
+        display:flex !important;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+        opacity:1;
+        pointer-events:auto;
+    }
+
+    .sidebar.hidden-sidebar{
+        display:flex !important;
+        transform:translateX(-100%);
+        opacity:0;
+        pointer-events:none;
     }
 
     .top{
@@ -1075,15 +1134,11 @@ body.hide-city-labels .airport-label{
     .grid{
         grid-template-columns:1fr 1fr;
     }
-}
-.settings-mobile-btn{display:none;}
-@media(max-width:900px){.settings-mobile-btn{display:flex;}.sidebar.mobile-settings-open{display:block!important;position:fixed;z-index:5000;left:10px;right:10px;top:76px;bottom:10px;width:auto;max-height:none;overflow:auto;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.65);background:rgba(7,15,27,.97);}}
 
-.settings-close-btn{display:none;}
-@media(max-width:900px){
-  .settings-close-btn{display:flex;position:absolute;right:10px;top:8px;width:36px;height:36px;align-items:center;justify-content:center;border:0;border-radius:10px;background:rgba(255,255,255,.10);color:#fff;font-size:28px;line-height:1;cursor:pointer;z-index:2;}
-  .sidebar.mobile-settings-open{padding-top:48px;}
-  .flight-label{font-size:10px!important;transform:scale(.82);transform-origin:center;pointer-events:none;}
+    /* Na telefonie ukrywamy przełącznik etykiet lotów */
+    .toggle-row.labels-toggle{
+        display:none !important;
+    }
 }
 </style>
 </head>
@@ -1131,6 +1186,14 @@ body.hide-city-labels .airport-label{
 
         <button
             class="iconbtn"
+            id="settingsBtn"
+            title="Ustawienia"
+        >
+            ⚙
+        </button>
+
+        <button
+            class="iconbtn"
             id="refreshBtn"
             title="Odśwież (R)"
         >
@@ -1145,8 +1208,6 @@ body.hide-city-labels .airport-label{
             ◎
         </button>
 
-        <button class="iconbtn settings-mobile-btn" id="settingsBtn" title="Ustawienia">⚙</button>
-
     </div>
 
 </div>
@@ -1159,7 +1220,16 @@ body.hide-city-labels .airport-label{
     ŚLEDZENIE LOTU AKTYWNE
 </div>
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
+
+    <button
+        class="sidebar-close"
+        id="sidebarClose"
+        title="Zamknij ustawienia"
+        aria-label="Zamknij"
+    >
+        ×
+    </button>
 
     <div class="sidebar-tabs">
 
@@ -1201,24 +1271,7 @@ body.hide-city-labels .airport-label{
 
             </div>
 
-            <div class="toggle-row">
-
-                <span class="toggle-label">
-                    Tylko w powietrzu
-                </span>
-
-                <label class="switch">
-                    <input
-                        type="checkbox"
-                        id="airborne"
-                        checked
-                    >
-                    <span class="slider"></span>
-                </label>
-
-            </div>
-
-            <div class="toggle-row">
+            <div class="toggle-row labels-toggle">
 
                 <span class="toggle-label">
                     Etykiety lotów
@@ -5227,23 +5280,10 @@ function getFilteredFlights(){
         .toLowerCase();
 
 
-    const onlyAirborne =
-        document
-        .getElementById(
-            "airborne"
-        )
-        .checked;
-
+    /* Pokazujemy wszystkie samoloty (w powietrzu i na ziemi) */
 
     return flights.filter(
         f => {
-
-            if(
-                onlyAirborne &&
-                f.ground
-            )
-                return false;
-
 
             if(!query)
                 return true;
@@ -6244,49 +6284,85 @@ function render(){
    PŁYNNA ANIMACJA
 ========================================================= */
 
-function syncFlightPathEndpoints(){
-    const cb=document.getElementById("showRoute");
-    if(!cb || !cb.checked) return;
-    for(const [icao,line] of flightPathLines){
-        const entry=markers.get(icao);
-        const history=flightHistories.get(icao);
-        if(!entry || !history || !history.length || !Array.isArray(entry.cur)) continue;
-        const points=history.slice();
-        const last=points[points.length-1];
-        const target=entry.target;
-        if(target && Math.abs(last[0]-target[0])<1e-9 && Math.abs(last[1]-target[1])<1e-9){
-            points[points.length-1]=[entry.cur[0],entry.cur[1]];
-        }else if(Math.abs(last[0]-entry.cur[0])>1e-9 || Math.abs(last[1]-entry.cur[1])>1e-9){
-            points.push([entry.cur[0],entry.cur[1]]);
-        }
-        if(points.length>=2) line.setLatLngs(points);
-    }
-}
-
 function animateMarkers(){
-    const smooth=document.getElementById("smoothMotion").checked;
+
+    const smooth =
+        document
+        .getElementById(
+            "smoothMotion"
+        )
+        .checked;
+
+
     if(smooth){
-        for(const entry of markers.values()){
-            const dLat=entry.target[0]-entry.cur[0];
-            const dLon=entry.target[1]-entry.cur[1];
-            if(Math.abs(dLat)>1e-7 || Math.abs(dLon)>1e-7){
-                entry.cur[0]+=dLat*0.06;
-                entry.cur[1]+=dLon*0.06;
-                if(Math.abs(entry.target[0]-entry.cur[0])<1e-7 && Math.abs(entry.target[1]-entry.cur[1])<1e-7) entry.cur=entry.target.slice();
-                entry.marker.setLatLng(entry.cur);
+
+        for(
+            const entry
+            of markers.values()
+        ){
+
+            const dLat =
+                entry.target[0] -
+                entry.cur[0];
+
+
+            const dLon =
+                entry.target[1] -
+                entry.cur[1];
+
+
+            if(
+                Math.abs(dLat) > 1e-7 ||
+                Math.abs(dLon) > 1e-7
+            ){
+
+                entry.cur[0] +=
+                    dLat * 0.06;
+
+
+                entry.cur[1] +=
+                    dLon * 0.06;
+
+
+                entry.marker.setLatLng(
+                    entry.cur
+                );
+
             }
+
         }
+
     }else{
-        for(const entry of markers.values()){
-            entry.cur=entry.target.slice();
-            entry.marker.setLatLng(entry.cur);
+
+        for(
+            const entry
+            of markers.values()
+        ){
+
+            entry.cur =
+                entry.target.slice();
+
+
+            entry.marker.setLatLng(
+                entry.cur
+            );
+
         }
+
     }
-    syncFlightPathEndpoints();
-    requestAnimationFrame(animateMarkers);
+
+
+    requestAnimationFrame(
+        animateMarkers
+    );
+
 }
 
-requestAnimationFrame(animateMarkers);
+
+requestAnimationFrame(
+    animateMarkers
+);
+
 
 /* =========================================================
    LIVE CARD
@@ -7018,14 +7094,6 @@ document
 
 document
     .getElementById(
-        "airborne"
-    )
-    .onchange =
-        render;
-
-
-document
-    .getElementById(
         "labels"
     )
     .onchange =
@@ -7069,10 +7137,6 @@ document
     .onchange =
         applyCityLabelsSetting;
 
-
-/* USTAWIENIA NA TELEFONIE */
-const settingsBtn=document.getElementById("settingsBtn");
-if(settingsBtn){settingsBtn.addEventListener("click",()=>{const sidebar=document.querySelector(".sidebar");if(sidebar) sidebar.classList.toggle("mobile-settings-open");});}
 
 /* =========================================================
    ROUTE TOGGLE
@@ -7373,8 +7437,88 @@ document.addEventListener(
 
 
 /* =========================================================
+   SIDEBAR / USTAWIENIA (otwieranie i zamykanie X)
+========================================================= */
+
+function isMobileView(){
+    return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function openSidebar(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    sidebar.classList.remove("hidden-sidebar");
+    if(isMobileView()){
+        sidebar.classList.add("open");
+    }
+}
+
+function closeSidebar(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    sidebar.classList.remove("open");
+    sidebar.classList.add("hidden-sidebar");
+}
+
+document
+    .getElementById("settingsBtn")
+    .onclick = function(){
+        const sidebar = document.getElementById("sidebar");
+        if(!sidebar) return;
+        if(isMobileView()){
+            if(sidebar.classList.contains("open")){
+                closeSidebar();
+            }else{
+                openSidebar();
+            }
+        }else{
+            /* Na desktopie też można schować/pokazać panel ustawień */
+            if(sidebar.classList.contains("hidden-sidebar")){
+                sidebar.classList.remove("hidden-sidebar");
+            }else{
+                sidebar.classList.add("hidden-sidebar");
+            }
+        }
+    };
+
+document
+    .getElementById("sidebarClose")
+    .onclick = closeSidebar;
+
+/* Escape zamyka też sidebar na mobile */
+document.addEventListener("keydown", function(event){
+    if(event.key === "Escape" && isMobileView()){
+        closeSidebar();
+    }
+});
+
+window.addEventListener("resize", function(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    if(!isMobileView()){
+        sidebar.classList.remove("open");
+        /* Na desktopie panel zostaje widoczny, chyba że użytkownik go schował */
+    }else if(!sidebar.classList.contains("open")){
+        sidebar.classList.add("hidden-sidebar");
+    }
+});
+
+
+/* =========================================================
    START
 ========================================================= */
+
+/* Na telefonie domyślnie wyłączamy etykiety lotów */
+if(isMobileView()){
+    const labelsCb = document.getElementById("labels");
+    if(labelsCb){
+        labelsCb.checked = false;
+    }
+    const sidebar = document.getElementById("sidebar");
+    if(sidebar){
+        sidebar.classList.add("hidden-sidebar");
+    }
+}
 
 renderAirports();
 
@@ -7390,7 +7534,7 @@ load();
 
 
 /*
-    Co 10 sekund:
+    Co 5 sekund:
 
     1. pobieramy nowe ADS-B,
     2. zapisujemy pozycje każdego ICAO,
