@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Polski Flight Radar24 — Ultimate Edition Pro</title>
+<title>Polish Flight Radar24 — Ultimate Edition Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -1078,6 +1078,13 @@ body.hide-city-labels .airport-label{
 }
 .settings-mobile-btn{display:none;}
 @media(max-width:900px){.settings-mobile-btn{display:flex;}.sidebar.mobile-settings-open{display:block!important;position:fixed;z-index:5000;left:10px;right:10px;top:76px;bottom:10px;width:auto;max-height:none;overflow:auto;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.65);background:rgba(7,15,27,.97);}}
+
+.settings-close-btn{display:none;}
+@media(max-width:900px){
+  .settings-close-btn{display:flex;position:absolute;right:10px;top:8px;width:36px;height:36px;align-items:center;justify-content:center;border:0;border-radius:10px;background:rgba(255,255,255,.10);color:#fff;font-size:28px;line-height:1;cursor:pointer;z-index:2;}
+  .sidebar.mobile-settings-open{padding-top:48px;}
+  .flight-label{font-size:10px!important;transform:scale(.82);transform-origin:center;pointer-events:none;}
+}
 </style>
 </head>
 
@@ -1093,7 +1100,7 @@ body.hide-city-labels .airport-label{
 
         <div>
             <div class="brand">
-                POLSKI FLIGHT RADAR24
+                POLISH FLIGHT RADAR24
             </div>
 
             <div class="sub">
