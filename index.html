@@ -1123,21 +1123,126 @@ body.hide-city-labels .airport-label{
     }
 
     .card{
-        left:10px;
-        right:10px;
+        left:0;
+        right:0;
         top:auto;
-        bottom:10px;
-        width:auto;
-        max-height:calc(100vh - 165px);
+        bottom:0;
+        width:100%;
+        max-height:88vh;
+        border-radius:20px 20px 0 0;
+        border-left:none;
+        border-right:none;
+        border-bottom:none;
+        transform:translateY(110%);
+        opacity:1;
+        transition:transform .32s cubic-bezier(.32,.72,0,1), max-height .32s ease;
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+        touch-action:pan-y;
+        box-shadow:0 -12px 40px rgba(0,0,0,.55);
+    }
+
+    .card.show{
+        transform:translateY(0);
+        opacity:1;
+    }
+
+    .card.sheet-collapsed{
+        max-height:min(340px, 52vh);
+    }
+
+    .card.sheet-expanded{
+        max-height:88vh;
+        overflow-y:auto;
+    }
+
+    .card.sheet-dragging{
+        transition:none !important;
+    }
+
+    .sheet-handle{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:10px 0 6px;
+        flex-shrink:0;
+        cursor:grab;
+        touch-action:none;
+        user-select:none;
+    }
+
+    .sheet-handle-bar{
+        width:42px;
+        height:5px;
+        border-radius:10px;
+        background:#3a5478;
+    }
+
+    .card .plane-photo-container{
+        height:160px;
+        flex-shrink:0;
+        border-radius:0;
+    }
+
+    .card.sheet-collapsed .card-details{
+        display:none !important;
+    }
+
+    .card.sheet-collapsed .card-inner{
+        padding:12px 16px 18px;
+    }
+
+    .card.sheet-collapsed .badge-row,
+    .card.sheet-collapsed .compass-wrap,
+    .card.sheet-collapsed .grid,
+    .card.sheet-collapsed .info-box{
+        display:none !important;
+    }
+
+    .card .sheet-hint{
+        display:block;
+        text-align:center;
+        font-size:10px;
+        color:var(--muted);
+        letter-spacing:.4px;
+        margin:2px 0 0;
+        padding-bottom:4px;
+    }
+
+    .card.sheet-expanded .sheet-hint{
+        display:none;
     }
 
     .grid{
         grid-template-columns:1fr 1fr;
     }
 
+    .layers{
+        bottom:auto;
+        top:auto;
+        right:10px;
+        bottom:12px;
+        z-index:1000;
+    }
+
     /* Na telefonie ukrywamy przełącznik etykiet lotów */
     .toggle-row.labels-toggle{
         display:none !important;
+    }
+}
+
+/* Handle tylko na mobile – na desktop ukryty */
+.sheet-handle{
+    display:none;
+}
+.sheet-hint{
+    display:none;
+}
+
+@media(max-width:900px){
+    .sheet-handle{
+        display:flex;
     }
 }
 </style>
@@ -3711,7 +3816,10 @@ function closeCard(){
 
 
     card.classList.remove(
-        "show"
+        "show",
+        "sheet-expanded",
+        "sheet-collapsed",
+        "sheet-dragging"
     );
 
 
@@ -3720,7 +3828,7 @@ function closeCard(){
             card.classList.add(
                 "hidden"
             ),
-        200
+        280
     );
 
 
@@ -3813,8 +3921,19 @@ function showFlight(f){
 
 
     card.classList.remove(
-        "hidden"
+        "hidden",
+        "sheet-expanded",
+        "sheet-dragging"
     );
+
+
+    /* Na telefonie karta startuje w trybie zwiniętym (zdjęcie + linia) */
+    if(typeof isMobileView === "function" && isMobileView()){
+        card.classList.add("sheet-collapsed");
+        card.classList.remove("sheet-expanded");
+    }else{
+        card.classList.remove("sheet-collapsed", "sheet-expanded");
+    }
 
 
     requestAnimationFrame(
@@ -4357,6 +4476,10 @@ async function updateFlightCard(f){
 
     card.innerHTML = `
 
+        <div class="sheet-handle" id="sheetHandle">
+            <div class="sheet-handle-bar"></div>
+        </div>
+
         <button
             class="close-card"
             id="closeCard"
@@ -4450,6 +4573,11 @@ async function updateFlightCard(f){
 
             </div>
 
+            <div class="sheet-hint">
+                ↑ Przeciągnij w górę, aby zobaczyć więcej
+            </div>
+
+            <div class="card-details">
 
             <div class="badge-row">
 
@@ -5162,6 +5290,8 @@ async function updateFlightCard(f){
 
             </div>
 
+            </div><!-- /.card-details -->
+
         </div>
     `;
 
@@ -5173,6 +5303,10 @@ async function updateFlightCard(f){
         .onclick =
             () =>
                 closeCard();
+
+
+    /* Na telefonie: karta startuje zwinięta (zdjęcie + linia lotnicza) */
+    initMobileSheet(card);
 
 
     const currentIcao =
@@ -7437,12 +7571,141 @@ document.addEventListener(
 
 
 /* =========================================================
-   SIDEBAR / USTAWIENIA (otwieranie i zamykanie X)
+   MOBILE BOTTOM SHEET (przeciąganie karty lotu)
 ========================================================= */
 
 function isMobileView(){
     return window.matchMedia("(max-width: 900px)").matches;
 }
+
+let sheetDragState = null;
+
+function expandMobileSheet(card){
+    if(!card) return;
+    card.classList.remove("sheet-collapsed");
+    card.classList.add("sheet-expanded");
+    card.style.transform = "";
+}
+
+function collapseMobileSheet(card){
+    if(!card) return;
+    card.classList.remove("sheet-expanded");
+    card.classList.add("sheet-collapsed");
+    card.style.transform = "";
+    card.scrollTop = 0;
+}
+
+function initMobileSheet(card){
+    if(!card || !isMobileView()) return;
+
+    card.classList.add("sheet-collapsed");
+    card.classList.remove("sheet-expanded", "sheet-dragging");
+    card.style.transform = "";
+
+    const handle = card.querySelector("#sheetHandle") || card.querySelector(".sheet-handle");
+    const photo = card.querySelector(".plane-photo-container");
+
+    /* Obsługa gestu na uchwycie i na zdjęciu */
+    const dragTargets = [handle, photo].filter(Boolean);
+
+    function onStart(clientY){
+        sheetDragState = {
+            startY: clientY,
+            lastY: clientY,
+            dy: 0,
+            expanded: card.classList.contains("sheet-expanded")
+        };
+        card.classList.add("sheet-dragging");
+    }
+
+    function onMove(clientY){
+        if(!sheetDragState) return;
+        const dy = clientY - sheetDragState.startY;
+        sheetDragState.dy = dy;
+        sheetDragState.lastY = clientY;
+
+        /* Ograniczamy ruch wizualny */
+        if(sheetDragState.expanded){
+            /* rozwijona: tylko w dół */
+            const clamped = Math.max(0, dy);
+            card.style.transform = `translateY(${clamped}px)`;
+        }else{
+            /* zwinięta: w górę (ujemne) lekko podnosi, w dół zamyka */
+            if(dy < 0){
+                const lift = Math.max(-80, dy * 0.35);
+                card.style.transform = `translateY(${lift}px)`;
+            }else{
+                card.style.transform = `translateY(${Math.min(dy, 220)}px)`;
+            }
+        }
+    }
+
+    function onEnd(){
+        if(!sheetDragState) return;
+        const dy = sheetDragState.dy;
+        const expanded = sheetDragState.expanded;
+        sheetDragState = null;
+        card.classList.remove("sheet-dragging");
+        card.style.transform = "";
+
+        if(expanded){
+            if(dy > 200){
+                /* bardzo mocno w dół → zamykamy */
+                closeCard();
+            }else if(dy > 70){
+                /* w dół → zwijamy do zdjęcia + linii */
+                collapseMobileSheet(card);
+            }
+            /* mały ruch – zostaje rozwinięta */
+        }else{
+            if(dy < -45){
+                /* w górę → rozwijamy pełne info */
+                expandMobileSheet(card);
+            }else if(dy > 100){
+                /* w dół → zamykamy kartę */
+                closeCard();
+            }
+        }
+    }
+
+    dragTargets.forEach(el => {
+        el.addEventListener("touchstart", e => {
+            if(e.touches.length !== 1) return;
+            onStart(e.touches[0].clientY);
+        }, {passive: true});
+
+        el.addEventListener("touchmove", e => {
+            if(!sheetDragState || e.touches.length !== 1) return;
+            onMove(e.touches[0].clientY);
+            /* blokujemy scroll strony przy przeciąganiu sheetu */
+            if(Math.abs(sheetDragState.dy) > 8){
+                e.preventDefault();
+            }
+        }, {passive: false});
+
+        el.addEventListener("touchend", onEnd, {passive: true});
+        el.addEventListener("touchcancel", onEnd, {passive: true});
+    });
+
+    /* Klik w hint / handle też rozwija */
+    if(handle){
+        handle.addEventListener("click", () => {
+            if(card.classList.contains("sheet-collapsed")){
+                expandMobileSheet(card);
+            }
+        });
+    }
+
+    const hint = card.querySelector(".sheet-hint");
+    if(hint){
+        hint.addEventListener("click", () => expandMobileSheet(card));
+    }
+}
+
+
+/* =========================================================
+   SIDEBAR / USTAWIENIA (otwieranie i zamykanie X)
+========================================================= */
 
 function openSidebar(){
     const sidebar = document.getElementById("sidebar");
