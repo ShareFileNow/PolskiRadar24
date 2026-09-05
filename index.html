@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Polish Flight Radar24 — Ultimate Edition Pro</title>
+<title>Cygan Flight Radar — Ultimate Edition Pro</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -861,36 +861,45 @@ body{
 .plane-marker{
     background:transparent!important;
     border:0!important;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
+    margin:0!important;
+    padding:0!important;
+    contain:layout style;
 }
 
 .plane-icon-svg{
     display:flex;
     align-items:center;
     justify-content:center;
-    width:44px;
-    height:44px;
+    width:44px!important;
+    height:44px!important;
+    min-width:44px!important;
+    min-height:44px!important;
     background:transparent!important;
     transform-origin:50% 50%;
     will-change:transform;
-    transition:transform .35s ease-out;
+    backface-visibility:hidden;
 }
 
 .plane-icon-svg svg{
-    width:36px;
-    height:36px;
+    display:block;
+    width:36px!important;
+    height:36px!important;
+    min-width:36px;
+    min-height:36px;
     filter:drop-shadow(0 2px 5px rgba(0,0,0,.9));
-    transition:filter .2s;
 }
 
 .plane-marker.selected .plane-icon-svg svg{
-    filter:
-        drop-shadow(0 0 10px rgba(47,184,255,1))
-        drop-shadow(0 2px 5px rgba(0,0,0,.9));
+    filter:drop-shadow(0 0 10px rgba(47,184,255,1)) drop-shadow(0 2px 5px rgba(0,0,0,.9));
 }
 
 .plane-marker.selected .plane-icon-svg{
-    width:50px;
-    height:50px;
+    width:50px!important;
+    height:50px!important;
 }
 
 .flight-label{
@@ -1048,33 +1057,28 @@ body.hide-city-labels .airport-label{
 /* ================= MOBILE ================= */
 
 @media(max-width:900px){
-
-    .sidebar{
-        display:none;
-    }
-
-    .top{
-        flex-direction:column;
-        align-items:stretch;
-    }
-
-    .controls input{
-        width:100%;
-        max-width:none;
-    }
-
-    .card{
-        left:10px;
-        right:10px;
-        top:auto;
-        bottom:10px;
-        width:auto;
-        max-height:calc(100vh - 165px);
-    }
-
-    .grid{
-        grid-template-columns:1fr 1fr;
-    }
+    .sidebar{display:none;}
+    .top{top:8px;left:8px;right:8px;flex-direction:column;align-items:stretch;gap:8px;padding:9px 10px;border-radius:12px;backdrop-filter:blur(8px);}
+    .brand-wrap{gap:8px;}
+    .brand-icon{width:30px;height:30px;border-radius:8px;font-size:14px;}
+    .brand{font-size:12px;letter-spacing:1px;}
+    .sub{font-size:8px;}
+    .controls{gap:6px;}
+    .controls input{width:100%;max-width:none;height:38px;font-size:13px;}
+    .iconbtn{width:38px;height:38px;min-width:38px;}
+    .layers{right:8px;bottom:8px;padding:4px;border-radius:11px;backdrop-filter:blur(8px);}
+    .layer-btn{min-width:0;padding:8px 10px;font-size:10px;}
+    .card{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:calc(100dvh - 125px);overflow:auto;-webkit-overflow-scrolling:touch;}
+    .grid{grid-template-columns:1fr 1fr;}
+    .flight-label{font-size:10px;padding:3px 6px;left:34px;}
+    .plane-marker,.plane-icon-svg{width:44px!important;height:44px!important;}
+    .plane-icon-svg svg{width:36px!important;height:36px!important;}
+}
+@media(max-width:480px){
+    .top{padding:8px;}
+    .sub{display:none;}
+    .brand{font-size:11px;}
+    .flight-label{display:none;}
 }
 </style>
 </head>
@@ -1091,7 +1095,7 @@ body.hide-city-labels .airport-label{
 
         <div>
             <div class="brand">
-                POLISH FLIGHT RADAR24
+                CYGAN FLIGHT RADAR PRO
             </div>
 
             <div class="sub">
@@ -2070,11 +2074,33 @@ function renderAllFlightPaths(){
             selected.icao === icao;
 
 
+        /*
+            WAŻNE:
+            linia musi kończyć się w aktualnej, animowanej pozycji
+            samolotu, a nie od razu w nowym punkcie ADS-B.
+            Dzięki temu podczas płynnego ruchu trasa nie "ucieka"
+            przed ikoną samolotu.
+        */
+        let pathPoints = history.slice();
+
+        const liveEntry = markers.get(icao);
+
+        if(
+            liveEntry &&
+            liveEntry.cur &&
+            pathPoints.length >= 2
+        ){
+            pathPoints[pathPoints.length - 1] = [
+                liveEntry.cur[0],
+                liveEntry.cur[1]
+            ];
+        }
+
         if(!line){
 
             line =
                 L.polyline(
-                    history,
+                    pathPoints,
                     {
                         color:"#2fb8ff",
 
@@ -2113,8 +2139,12 @@ function renderAllFlightPaths(){
         }else{
 
             line.setLatLngs(
-                history
+                pathPoints
             );
+
+            /* Nowa geometria musi zostać ponownie zrzutowana na piksele. */
+            if(typeof line._reset === "function")
+                line._reset();
 
 
             line.setStyle({
@@ -6233,84 +6263,116 @@ function render(){
    PŁYNNA ANIMACJA
 ========================================================= */
 
-function animateMarkers(){
+let lastAnimationTime = 0;
 
-    const smooth =
-        document
-        .getElementById(
-            "smoothMotion"
-        )
-        .checked;
+function syncFlightPathToMarker(entry){
+    const icao = entry.data?.icao;
+    const line = flightPathLines.get(icao);
 
+    if(!line || !map.hasLayer(line))
+        return;
 
-    if(smooth){
+    const points = line.getLatLngs();
 
-        for(
-            const entry
-            of markers.values()
-        ){
+    if(!points || points.length < 2)
+        return;
 
-            const dLat =
-                entry.target[0] -
-                entry.cur[0];
+    /*
+        KLUCZOWA POPRAWKA:
+        samo zmienienie last.lat / last.lng nie wystarcza w Leaflet,
+        bo renderer może nadal używać wcześniej wyliczonych pikseli.
+        Dlatego ustawiamy końcowy punkt i wymuszamy ponowne
+        przeliczenie geograficzne -> pikselowe przez _reset().
 
-
-            const dLon =
-                entry.target[1] -
-                entry.cur[1];
-
-
-            if(
-                Math.abs(dLat) > 1e-7 ||
-                Math.abs(dLon) > 1e-7
-            ){
-
-                entry.cur[0] +=
-                    dLat * 0.06;
-
-
-                entry.cur[1] +=
-                    dLon * 0.06;
-
-
-                entry.marker.setLatLng(
-                    entry.cur
-                );
-
-            }
-
-        }
-
-    }else{
-
-        for(
-            const entry
-            of markers.values()
-        ){
-
-            entry.cur =
-                entry.target.slice();
-
-
-            entry.marker.setLatLng(
-                entry.cur
-            );
-
-        }
-
-    }
-
-
-    requestAnimationFrame(
-        animateMarkers
+        Dzięki temu koniec niebieskiej linii jest w tej samej
+        pozycji mapy co aktualnie animowany samolot.
+    */
+    const lastIndex = points.length - 1;
+    points[lastIndex] = L.latLng(
+        entry.cur[0],
+        entry.cur[1]
     );
 
+    line.setLatLngs(points);
+
+    /* _reset() wymusza ponowne wyliczenie pozycji SVG/canvas. */
+    if(typeof line._reset === "function")
+        line._reset();
+    else
+        line.redraw();
 }
 
 
-requestAnimationFrame(
-    animateMarkers
-);
+function animateMarkers(now = performance.now()){
+    if(now - lastAnimationTime < 33){
+        requestAnimationFrame(animateMarkers);
+        return;
+    }
+    lastAnimationTime = now;
+
+    const smoothEl = document.getElementById("smoothMotion");
+    const smooth = smoothEl ? smoothEl.checked : true;
+
+    for(const entry of markers.values()){
+        const dLat = entry.target[0] - entry.cur[0];
+        const dLon = entry.target[1] - entry.cur[1];
+
+        let moved = false;
+
+        if(smooth){
+            if(Math.abs(dLat) > 1e-6 || Math.abs(dLon) > 1e-6){
+                entry.cur[0] += dLat * 0.16;
+                entry.cur[1] += dLon * 0.16;
+                entry.marker.setLatLng(entry.cur);
+                moved = true;
+            }else if(dLat !== 0 || dLon !== 0){
+                entry.cur[0] = entry.target[0];
+                entry.cur[1] = entry.target[1];
+                entry.marker.setLatLng(entry.cur);
+                moved = true;
+            }
+        }else if(dLat !== 0 || dLon !== 0){
+            entry.cur[0] = entry.target[0];
+            entry.cur[1] = entry.target[1];
+            entry.marker.setLatLng(entry.cur);
+            moved = true;
+        }
+
+        /*
+            Linia niebieska porusza się dokładnie razem z ikoną.
+            Aktualizujemy ją tylko wtedy, gdy samolot faktycznie
+            zmienił pozycję.
+        */
+        if(moved){
+            syncFlightPathToMarker(entry);
+        }
+    }
+
+    requestAnimationFrame(animateMarkers);
+}
+
+requestAnimationFrame(animateMarkers);
+
+function normalizePlaneIcons(){
+    for(const entry of markers.values()){
+        const el = entry.marker.getElement();
+        if(!el) continue;
+        el.style.width = "44px";
+        el.style.height = "44px";
+        const plane = el.querySelector(".plane-icon-svg");
+        if(plane){
+            plane.style.width = "44px";
+            plane.style.height = "44px";
+        }
+        const svg = el.querySelector("svg");
+        if(svg){
+            svg.style.width = "36px";
+            svg.style.height = "36px";
+        }
+    }
+}
+
+map.on("zoomend", normalizePlaneIcons);
 
 
 /* =========================================================
