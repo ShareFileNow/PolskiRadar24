@@ -2846,8 +2846,8 @@ function parseCategory(category){
 
 /* Rozpoznawanie pojazdów naziemnych (follow-me, tug, bus itd.)
    WAŻNE: tylko gdy f.ground === true.
-   Nie używamy krótkich substringów typu "BUS" / "CAR" –
-   "BUS" łapało AIRBUS i pokazywało autko na normalnych samolotach. */
+   A0 w ADS-B = brak kategorii (NIE pojazd!) – stąd LZ-EAL/A320
+   po lądowaniu zamieniał się w autko. */
 function isGroundVehicle(f){
 
     if(!f || !f.ground)
@@ -2857,20 +2857,42 @@ function isGroundVehicle(f){
     const type = String(f.type || "").toUpperCase().trim();
     const model = String(f.model || "").toUpperCase().trim();
     const cat = String(f.category || "").toUpperCase().trim();
+    const reg = String(f.reg || "").toUpperCase().trim();
 
-    /* Kategoria ADS-B: pojazd naziemny */
+    /* TWR / GND w rejestracji lub modelu → auto (NIE callsign) */
     if(
-        cat.includes("VEHICLE") ||
-        cat.includes("GROUND") ||
-        cat === "A0" ||
-        cat === "GND"
+        reg.includes("TWR") || model.includes("TWR") || type.includes("TWR") ||
+        reg.includes("GND") || model.includes("GND") || type.includes("GND")
     )
         return true;
 
-    /* Callsign typowy dla follow-me / tug / GSE – cały token, nie substring w nazwie typu */
+    /* Normalny samolot: callsign linii (AMQ6029), typ (A320), rejestracja (LZ-EAL) → NIGDY auto */
+    if(/^[A-Z]{3}\d{1,5}$/.test(call))
+        return false;
+
+    if(/^[A-Z]{1,2}-[A-Z0-9]{2,5}$/.test(reg))
+        return false;
+
+    if(/^(A[0-9]{2}|B[0-9]{2}|E[0-9]{2}|C[0-9]{2}|CRJ|ERJ|DH[0-9]|AT[0-9]|BE[0-9]|PA[0-9]|MD[0-9]|IL[0-9]|TU[0-9]|AN[0-9]|RJ[0-9]|SF[0-9]|GLF|C56|C68|C25)/.test(type))
+        return false;
+
+    if(type.includes("AIRBUS") || type.includes("BOEING") || model.includes("AIRBUS") || model.includes("BOEING"))
+        return false;
+
+    /* Kategoria ADS-B – TYLKO wyraźny pojazd. A0 = brak info, NIE pojazd. */
+    if(
+        cat === "GND" ||
+        cat === "VEHICLE" ||
+        cat === "GROUND VEHICLE" ||
+        cat === "B2" ||
+        (cat.includes("VEHICLE") && !/A[1-7]/.test(cat))
+    )
+        return true;
+
+    /* Callsign follow-me / tug / GSE */
     const callHints = [
         "FOLLOW", "FOLLOWME", "FOLLOW-ME", "TUG", "TOW",
-        "GND", "GSE", "GPU", "ASU", "DEICE", "DE-ICE",
+        "GND", "GSE", "GPU", "DEICE", "DE-ICE",
         "MARSHAL", "RAMP", "APRON", "BAGGAGE", "CATERING"
     ];
 
@@ -2879,33 +2901,30 @@ function isGroundVehicle(f){
             call === hint ||
             call.startsWith(hint + " ") ||
             call.startsWith(hint + "-") ||
-            call.startsWith(hint + "_") ||
-            call.includes(" " + hint) ||
-            call.startsWith(hint)
-        ){
-            /* Odrzuć jeśli to wygląda na normalny callsign linii (np. 3 litery + numer) */
-            if(/^[A-Z]{3}\d/.test(call) && !callHints.some(h => call.startsWith(h)))
-                continue;
+            call.startsWith(hint + "_")
+        )
             return true;
-        }
     }
 
-    /* Typ / model wyraźnie pojazd – nie „AIRBUS” */
+    /* Typ / model wyraźnie pojazd */
     const typeHints = [
         "VEHICLE", "GROUND VEHICLE", "GSE", "FOLLOW ME",
         "TUG", "TOW TRACTOR", "PUSHBACK"
     ];
 
     for(const hint of typeHints){
-        if(type === hint || model === hint || type.includes(hint) || model.includes(hint))
+        if(type === hint || model === hint)
             return true;
     }
 
-    /* Na ziemi, bardzo wolno, brak sensownego typu samolotu */
+    /* Na ziemi, bardzo wolno, ZERO danych o typie samolotu */
     if(
         Number.isFinite(f.speed) &&
-        f.speed < 12 &&
-        (!type || type === "UNKNOWN" || type === "N/A" || type.length < 2)
+        f.speed < 8 &&
+        !type &&
+        !model &&
+        !reg &&
+        !/^[A-Z]{3}\d/.test(call)
     )
         return true;
 
