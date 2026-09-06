@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Polish Flight Radar24 — Ultimate Edition Pro</title>
+<title>PolishFlightRadar24 — Ultimate Edition Pro</title>
 
 <link rel="icon" type="image/png" href="polradlogo.png">
 <link rel="apple-touch-icon" href="polradlogo.png">
@@ -1506,6 +1506,46 @@ body.hide-city-labels .airport-label{
 
             </div>
 
+            <div class="toggle-row">
+                <span class="toggle-label">Granica Polski</span>
+                <label class="switch">
+                    <input type="checkbox" id="showPolandBorder" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Tylko w powietrzu</span>
+                <label class="switch">
+                    <input type="checkbox" id="onlyAirborne">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Tylko na ziemi</span>
+                <label class="switch">
+                    <input type="checkbox" id="onlyGround">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Squawk alarmowy (75/76/77)</span>
+                <label class="switch">
+                    <input type="checkbox" id="onlyEmergency">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Tylko helikoptery</span>
+                <label class="switch">
+                    <input type="checkbox" id="onlyHeli">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
             <div class="legend-title" data-i18n="altitude_color">
                 Kolor wg wysokości
             </div>
@@ -1606,6 +1646,37 @@ const map = L.map("map", {
     preferCanvas:true
 });
 
+/* Nie aktualizujemy końcówki toru w trakcie animacji zoomu.
+   Dzięki temu niebieska linia pozostaje przyklejona do mapy
+   i nie przesuwa się / nie wraca podczas przybliżania. */
+let isMapZooming = false;
+
+map.on("zoomstart", () => {
+    isMapZooming = true;
+});
+
+map.on("zoomend", () => {
+    isMapZooming = false;
+
+    for(const [icao, entry] of markers){
+        const line = flightPathLines.get(icao);
+        const history = flightHistories.get(icao);
+
+        if(
+            line &&
+            history &&
+            history.length >= 2 &&
+            entry &&
+            entry.cur
+        ){
+            line.setLatLngs([
+                ...history,
+                entry.cur.slice()
+            ]);
+        }
+    }
+});
+
 const radarLayer = L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
@@ -1621,6 +1692,32 @@ const satelliteLayer = L.tileLayer(
         attribution:"Tiles &copy; Esri"
     }
 ).addTo(map);
+
+
+function initPolandBorder(){
+    if(polandBorderLayer) return;
+    polandBorderLayer = L.geoJSON(polandBorderGeoJSON, {
+        style: {
+            color: "#d0d0d0",
+            weight: 2.5,
+            opacity: 0.95,
+            fillColor: "#d0d0d0",
+            fillOpacity: 0.02
+        },
+        interactive: false
+    });
+}
+
+function applyPolandBorder(){
+    initPolandBorder();
+    const on = document.getElementById("showPolandBorder");
+    if(on && on.checked){
+        if(!map.hasLayer(polandBorderLayer))
+            polandBorderLayer.addTo(map);
+    }else if(polandBorderLayer && map.hasLayer(polandBorderLayer)){
+        map.removeLayer(polandBorderLayer);
+    }
+}
 
 
 /* =========================================================
@@ -1902,100 +1999,79 @@ const AIRPORT_GROUND_DELAY_MS = 0; /* natychmiastowy status na ziemi – bez cze
 
 const majorAirports = [
 
-    {
-        name:"Lotnisko Chopina w Warszawie",
-        icao:"EPWA",
-        iata:"WAW",
-        city:"Warszawa",
-        country:"Polska",
-        lat:52.1657,
-        lon:20.9671,
-        elev:"362 ft",
-        atc:"epwa_app"
-    },
+    /* ——— duże porty ——— */
+    { name:"Lotnisko Chopina w Warszawie", icao:"EPWA", iata:"WAW", city:"Warszawa", country:"Polska", lat:52.1657, lon:20.9671, elev:"362 ft", atc:"epwa_app", runways:["33/15 — 3690 m","11/29 — 2800 m"] },
+    { name:"Port Lotniczy Kraków-Balice", icao:"EPKK", iata:"KRK", city:"Kraków", country:"Polska", lat:50.0777, lon:19.7848, elev:"797 ft", atc:"epkk_app", runways:["07/25 — 2550 m"] },
+    { name:"Port Lotniczy Katowice-Pyrzowice", icao:"EPKT", iata:"KTW", city:"Katowice", country:"Polska", lat:50.4743, lon:19.0800, elev:"997 ft", atc:"epkt", runways:["08/26 — 3200 m"] },
+    { name:"Port Lotniczy Wrocław", icao:"EPWR", iata:"WRO", city:"Wrocław", country:"Polska", lat:51.1027, lon:16.8858, elev:"404 ft", atc:"epwr4_app2", runways:["11/29 — 2503 m"] },
+    { name:"Port Lotniczy Gdańsk", icao:"EPGD", iata:"GDN", city:"Gdańsk", country:"Polska", lat:54.3776, lon:18.4662, elev:"48 ft", runways:["11/29 — 2800 m"] },
+    { name:"Port Lotniczy Poznań-Ławica", icao:"EPPO", iata:"POZ", city:"Poznań", country:"Polska", lat:52.4210, lon:16.8263, elev:"308 ft", atc:"eppo2", runways:["10/28 — 2504 m"] },
+    { name:"Warszawa-Modlin", icao:"EPMO", iata:"WMI", city:"Modlin", country:"Polska", lat:52.4511, lon:20.6517, elev:"348 ft", runways:["08/26 — 2500 m"] },
+    { name:"Rzeszów-Jasionka", icao:"EPRZ", iata:"RZE", city:"Rzeszów", country:"Polska", lat:50.1100, lon:22.0190, elev:"699 ft", runways:["09/27 — 3200 m"] },
+    { name:"Port Lotniczy Szczecin-Goleniów", icao:"EPSC", iata:"SZZ", city:"Szczecin", country:"Polska", lat:53.5847, lon:14.9022, elev:"154 ft", runways:["13/31 — 2500 m"] },
+    { name:"Port Lotniczy Łódź", icao:"EPLL", iata:"LCJ", city:"Łódź", country:"Polska", lat:51.7219, lon:19.3981, elev:"604 ft", runways:["07L/25R — 2500 m","07R/25L — 1600 m"] },
+    { name:"Port Lotniczy Bydgoszcz", icao:"EPBY", iata:"BZG", city:"Bydgoszcz", country:"Polska", lat:53.0968, lon:17.9777, elev:"235 ft", runways:["08/26 — 2500 m"] },
+    { name:"Port Lotniczy Lublin", icao:"EPLB", iata:"LUZ", city:"Lublin", country:"Polska", lat:51.2403, lon:22.7136, elev:"633 ft", runways:["07/25 — 2520 m"] },
+    { name:"Port Lotniczy Olsztyn-Mazury", icao:"EPSY", iata:"SZY", city:"Szymany", country:"Polska", lat:53.4819, lon:20.9377, elev:"463 ft", runways:["01/19 — 2500 m"] },
+    { name:"Port Lotniczy Zielona Góra-Babimost", icao:"EPZG", iata:"IEG", city:"Babimost", country:"Polska", lat:52.1385, lon:15.7985, elev:"194 ft", runways:["06/24 — 2500 m"] },
+    { name:"Port Lotniczy Białystok-Krywlany", icao:"EPBK", iata:"—", city:"Białystok", country:"Polska", lat:53.1015, lon:23.1710, elev:"499 ft", runways:["09/27 — 1000 m"] },
 
-    {
-        name:"Port Lotniczy Kraków-Balice",
-        icao:"EPKK",
-        iata:"KRK",
-        city:"Kraków",
-        country:"Polska",
-        lat:50.0777,
-        lon:19.7848,
-        elev:"797 ft",
-        atc:"epkk_app"
-    },
-
-    {
-        name:"Port Lotniczy Katowice-Pyrzowice",
-        icao:"EPKT",
-        iata:"KTW",
-        city:"Katowice",
-        country:"Polska",
-        lat:50.4743,
-        lon:19.0800,
-        elev:"997 ft",
-        atc:"epkt"
-    },
-
-    {
-        name:"Port Lotniczy Wrocław",
-        icao:"EPWR",
-        iata:"WRO",
-        city:"Wrocław",
-        country:"Polska",
-        lat:51.1027,
-        lon:16.8858,
-        elev:"404 ft",
-        atc:"epwr4_app2"
-    },
-
-    {
-        name:"Port Lotniczy Gdańsk",
-        icao:"EPGD",
-        iata:"GDN",
-        city:"Gdańsk",
-        country:"Polska",
-        lat:54.3776,
-        lon:18.4662,
-        elev:"48 ft"
-    },
-
-    {
-        name:"Port Lotniczy Poznań-Ławica",
-        icao:"EPPO",
-        iata:"POZ",
-        city:"Poznań",
-        country:"Polska",
-        lat:52.4210,
-        lon:16.8263,
-        elev:"308 ft",
-        atc:"eppo2"
-    },
-
-    {
-        name:"Warszawa-Modlin",
-        icao:"EPMO",
-        iata:"WMI",
-        city:"Modlin",
-        country:"Polska",
-        lat:52.4511,
-        lon:20.6517,
-        elev:"348 ft"
-    },
-
-    {
-        name:"Rzeszów-Jasionka",
-        icao:"EPRZ",
-        iata:"RZE",
-        city:"Rzeszów",
-        country:"Polska",
-        lat:50.1100,
-        lon:22.0190,
-        elev:"699 ft"
-    }
+    /* ——— mniejsze / popularne / aerokluby ——— */
+    { name:"Lotnisko Gliwice", icao:"EPGL", iata:"—", city:"Gliwice", country:"Polska", lat:50.26944, lon:18.67278, elev:"833 ft", runways:["09/27 — 1000 m"] },
+    { name:"Lotnisko Muchowiec (Katowice)", icao:"EPKM", iata:"—", city:"Katowice", country:"Polska", lat:50.2390, lon:19.0342, elev:"909 ft", runways:["05/23 — 1100 m"] },
+    { name:"Lotnisko Babice (Warszawa)", icao:"EPBC", iata:"—", city:"Warszawa", country:"Polska", lat:52.2685, lon:20.9110, elev:"351 ft", runways:["10/28 — 1300 m","01/19 — 1000 m"] },
+    { name:"Lotnisko Bemowo (Warszawa)", icao:"EPBW", iata:"—", city:"Warszawa", country:"Polska", lat:52.2700, lon:20.9100, elev:"350 ft", runways:["10/28 — 1000 m"] },
+    { name:"Lotnisko Aeroklubu Warszawskiego – Chrcynno", icao:"EPCH", iata:"—", city:"Chrcynno", country:"Polska", lat:52.5750, lon:20.6100, elev:"320 ft", runways:["09/27 — 800 m"] },
+    { name:"Lotnisko Pobiednik Wielki (Kraków)", icao:"EPKP", iata:"—", city:"Kraków", country:"Polska", lat:50.1080, lon:20.2260, elev:"620 ft", runways:["07/25 — 800 m"] },
+    { name:"Lotnisko Kąkolewo (Leszno)", icao:"EPLS", iata:"—", city:"Leszno", country:"Polska", lat:51.8350, lon:16.5220, elev:"310 ft", runways:["06/24 — 1000 m"] },
+    { name:"Lotnisko Aeroklubu Poznańskiego – Kobylnica", icao:"EPKO", iata:"—", city:"Kobylnica", country:"Polska", lat:52.4360, lon:17.0100, elev:"300 ft", runways:["10/28 — 900 m"] },
+    { name:"Lotnisko Aeroklubu Gdańskiego – Pruszcz", icao:"EPPR", iata:"—", city:"Pruszcz Gdański", country:"Polska", lat:54.2480, lon:18.6620, elev:"20 ft", runways:["08/26 — 2000 m"] },
+    { name:"Lotnisko Mielec", icao:"EPML", iata:"—", city:"Mielec", country:"Polska", lat:50.3223, lon:21.4622, elev:"540 ft", runways:["09/27 — 2500 m"] },
+    { name:"Lotnisko Świdnik", icao:"EPSW", iata:"—", city:"Świdnik", country:"Polska", lat:51.2310, lon:22.6900, elev:"620 ft", runways:["08/26 — 1200 m"] },
+    { name:"Lotnisko Kielce-Masłów", icao:"EPKA", iata:"—", city:"Kielce", country:"Polska", lat:50.8960, lon:20.7320, elev:"1020 ft", runways:["11/29 — 1600 m"] },
+    { name:"Lotnisko Opole-Polska Nowa Wieś", icao:"EPOP", iata:"—", city:"Opole", country:"Polska", lat:50.6330, lon:17.7800, elev:"540 ft", runways:["09/27 — 1000 m"] },
+    { name:"Lotnisko Radom-Sadków", icao:"EPRA", iata:"RDO", city:"Radom", country:"Polska", lat:51.3890, lon:21.2130, elev:"610 ft", runways:["07/25 — 2000 m"] },
+    { name:"Lotnisko Toruń", icao:"EPTO", iata:"—", city:"Toruń", country:"Polska", lat:53.0480, lon:18.5460, elev:"150 ft", runways:["11/29 — 1300 m"] },
+    { name:"Lotnisko Inowrocław", icao:"EPIN", iata:"—", city:"Inowrocław", country:"Polska", lat:52.7780, lon:18.2880, elev:"280 ft", runways:["08/26 — 1000 m"] },
+    { name:"Lotnisko Piła", icao:"EPPI", iata:"—", city:"Piła", country:"Polska", lat:53.1680, lon:16.7100, elev:"250 ft", runways:["08/26 — 1200 m"] },
+    { name:"Lotnisko Słupsk-Redzikowo", icao:"EPSK", iata:"—", city:"Słupsk", country:"Polska", lat:54.4970, lon:17.0480, elev:"200 ft", runways:["09/27 — 2500 m"] },
+    { name:"Lotnisko Elbląg", icao:"EPEL", iata:"—", city:"Elbląg", country:"Polska", lat:54.1420, lon:19.4230, elev:"10 ft", runways:["10/28 — 1000 m"] },
+    { name:"Lotnisko Suwałki", icao:"EPSU", iata:"—", city:"Suwałki", country:"Polska", lat:54.0720, lon:22.8990, elev:"590 ft", runways:["01/19 — 1000 m"] },
+    { name:"Lotnisko Jelenia Góra", icao:"EPJG", iata:"—", city:"Jelenia Góra", country:"Polska", lat:50.8990, lon:15.7860, elev:"1120 ft", runways:["12/30 — 900 m"] },
+    { name:"Lotnisko Częstochowa-Rudniki", icao:"EPCZ", iata:"—", city:"Częstochowa", country:"Polska", lat:50.8850, lon:19.2040, elev:"860 ft", runways:["08/26 — 1600 m"] },
+    { name:"Lotnisko Bielsko-Biała Aleksandrowice", icao:"EPBA", iata:"—", city:"Bielsko-Biała", country:"Polska", lat:49.8050, lon:19.0020, elev:"1300 ft", runways:["08/26 — 800 m"] },
+    { name:"Lotnisko Nowy Targ", icao:"EPNT", iata:"—", city:"Nowy Targ", country:"Polska", lat:49.4630, lon:20.0500, elev:"2060 ft", runways:["03/21 — 1200 m"] },
+    { name:"Lotnisko Krosno", icao:"EPKR", iata:"—", city:"Krosno", country:"Polska", lat:49.6820, lon:21.7400, elev:"920 ft", runways:["11/29 — 1100 m"] },
+    { name:"Lotnisko Aeroklubu Ziemi Mazowieckiej – Płock", icao:"EPPL", iata:"—", city:"Płock", country:"Polska", lat:52.5610, lon:19.6520, elev:"330 ft", runways:["09/27 — 1000 m"] },
+    { name:"Lotnisko Dęblin (wojskowe)", icao:"EPDE", iata:"—", city:"Dęblin", country:"Polska", lat:51.5520, lon:21.8930, elev:"390 ft", runways:["12/30 — 2500 m"] },
+    { name:"Lotnisko Mińsk Mazowiecki", icao:"EPMM", iata:"—", city:"Mińsk Mazowiecki", country:"Polska", lat:52.1950, lon:21.6560, elev:"500 ft", runways:["08/26 — 2000 m"] },
+    { name:"Lotnisko Sochaczew-Bielice", icao:"EPSO", iata:"—", city:"Sochaczew", country:"Polska", lat:52.1980, lon:20.2900, elev:"280 ft", runways:["09/27 — 2000 m"] },
+    { name:"Lotnisko Tomaszów Mazowiecki", icao:"EPTM", iata:"—", city:"Tomaszów Mazowiecki", country:"Polska", lat:51.5850, lon:20.0980, elev:"570 ft", runways:["11/29 — 2000 m"] }
 
 ];
+
+
+/* Uproszczona granica Polski (widoczna na mapie i satelicie) */
+const polandBorderGeoJSON = {
+    type: "Feature",
+    properties: { name: "Polska" },
+    geometry: {
+        type: "Polygon",
+        coordinates: [[
+            [14.12,53.33],[14.25,53.90],[14.60,54.35],[15.20,54.20],[16.00,54.50],
+            [16.80,54.55],[17.60,54.80],[18.50,54.80],[18.95,54.45],[19.50,54.40],
+            [20.20,54.50],[21.00,54.40],[21.80,54.40],[22.80,54.35],[23.50,54.20],
+            [23.90,53.90],[23.50,53.40],[23.60,52.90],[23.90,52.40],[23.50,52.00],
+            [23.20,51.50],[23.50,51.00],[24.00,50.70],[24.10,50.30],[23.50,50.00],
+            [22.90,49.50],[22.70,49.10],[22.10,49.20],[21.20,49.40],[20.00,49.20],
+            [19.00,49.40],[18.50,49.50],[17.80,50.00],[16.80,50.10],[16.00,50.30],
+            [15.20,50.80],[14.80,51.20],[14.60,51.70],[14.40,52.20],[14.20,52.70],
+            [14.12,53.33]
+        ]]
+    }
+};
+
+let polandBorderLayer = null;
 
 
 /* =========================================================
@@ -3374,6 +3450,31 @@ function isRotorcraft(f){
 }
 
 
+/* Kategoria wyświetlana na karcie – uwzględnia helikopter / pojazd, nie tylko surowe ADS-B */
+function getDisplayCategory(f){
+
+    if(!f)
+        return { name: "STANDARD" };
+
+    if(isGroundVehicle(f))
+        return { name: currentLang === "en" ? "GROUND VEHICLE" : "POJAZD NAZIEMNY" };
+
+    if(isRotorcraft(f))
+        return { name: currentLang === "en" ? "HELICOPTER" : "HELIKOPTER" };
+
+    const parsed = parseCategory(f.category);
+
+    if(parsed.name === "ROTORCRAFT")
+        return { name: currentLang === "en" ? "HELICOPTER" : "HELIKOPTER" };
+
+    if(parsed.name === "GROUND VEHICLE")
+        return { name: currentLang === "en" ? "GROUND VEHICLE" : "POJAZD NAZIEMNY" };
+
+    return parsed;
+
+}
+
+
 /* =========================================================
    STATUS LOTU
 ========================================================= */
@@ -4004,7 +4105,7 @@ function renderAirports(){
                     </div>
 
                     <div class="airport-label">
-                        ${escapeHtml(airport.iata)}
+                        ${escapeHtml(airport.icao)}
                         -
                         ${escapeHtml(airport.city)}
                     </div>
@@ -4217,6 +4318,15 @@ function showAirportCard(airport){
                 <div>
                     <b>Wysokość lotniska:</b>
                     ${escapeHtml(airport.elev)}
+                </div>
+
+                <div>
+                    <b>${currentLang === "en" ? "Runway(s)" : "Pas(y) startowy"}:</b>
+                    ${
+                        airport.runways && airport.runways.length
+                        ? airport.runways.map(r => escapeHtml(r)).join("<br>")
+                        : "—"
+                    }
                 </div>
 
                 <div>
@@ -4867,8 +4977,8 @@ async function updateFlightCard(f){
 
 
     const category =
-        parseCategory(
-            f.category
+        getDisplayCategory(
+            f
         );
 
 
@@ -6052,11 +6162,29 @@ function getFilteredFlights(){
         .trim()
         .toLowerCase();
 
+    const onlyAir = document.getElementById("onlyAirborne")?.checked;
+    const onlyGnd = document.getElementById("onlyGround")?.checked;
+    const onlyEmerg = document.getElementById("onlyEmergency")?.checked;
+    const onlyHeli = document.getElementById("onlyHeli")?.checked;
 
-    /* Pokazujemy wszystkie samoloty (w powietrzu i na ziemi) */
 
     return flights.filter(
         f => {
+
+            if(onlyAir && f.ground)
+                return false;
+
+            if(onlyGnd && !f.ground)
+                return false;
+
+            if(onlyEmerg){
+                const sq = String(f.squawk || "");
+                if(sq !== "7500" && sq !== "7600" && sq !== "7700")
+                    return false;
+            }
+
+            if(onlyHeli && !isRotorcraft(f))
+                return false;
 
             if(!query)
                 return true;
@@ -7087,7 +7215,13 @@ function render(){
    PŁYNNA ANIMACJA
 ========================================================= */
 
+let lastAnimTs = performance.now();
+
 function animateMarkers(){
+
+    const now = performance.now();
+    const dt = Math.min(0.1, (now - lastAnimTs) / 1000); /* sekundy, max 100ms */
+    lastAnimTs = now;
 
     const smooth =
         document
@@ -7104,33 +7238,66 @@ function animateMarkers(){
             of markers.values()
         ){
 
-            const dLat =
-                entry.target[0] -
-                entry.cur[0];
+            const f = entry.data;
+            if(!f) continue;
 
+            /* 1) Korekta w stronę ostatniej pozycji ADS-B (target) */
+            const dLat = entry.target[0] - entry.cur[0];
+            const dLon = entry.target[1] - entry.cur[1];
+            const distErr = Math.sqrt(dLat * dLat + dLon * dLon);
 
-            const dLon =
-                entry.target[1] -
-                entry.cur[1];
+            /* Mocniejsza korekta gdy daleko od targetu, delikatna gdy blisko */
+            const pull = distErr > 0.05 ? 0.12 : (distErr > 0.01 ? 0.08 : 0.04);
+            entry.cur[0] += dLat * pull;
+            entry.cur[1] += dLon * pull;
 
-
+            /* 2) Predykcja ruchu: prędkość (m/s) + heading → ciągły ruch między refreshami */
             if(
-                Math.abs(dLat) > 1e-7 ||
-                Math.abs(dLon) > 1e-7
+                !f.ground &&
+                Number.isFinite(f.speed) &&
+                f.speed > 5
             ){
+                const heading = getFlightDirection(f);
+                if(heading !== null){
+                    const speedMs = f.speed; /* już w m/s */
+                    const rad = heading * Math.PI / 180;
+                    /* ~111320 m na stopień szerokości */
+                    const dLatPred = (speedMs * Math.cos(rad) * dt) / 111320;
+                    const cosLat = Math.cos(entry.cur[0] * Math.PI / 180) || 0.01;
+                    const dLonPred = (speedMs * Math.sin(rad) * dt) / (111320 * cosLat);
+                    entry.cur[0] += dLatPred;
+                    entry.cur[1] += dLonPred;
+                    /* lekko przesuwamy też target, żeby nie „ciągnąć wstecz” */
+                    entry.target[0] += dLatPred * 0.35;
+                    entry.target[1] += dLonPred * 0.35;
+                }
+            }
 
-                entry.cur[0] +=
-                    dLat * 0.06;
+            entry.marker.setLatLng(entry.cur);
 
+            /*
+               Płynnie aktualizujemy końcówkę niebieskiego toru
+               razem z płynnie poruszającym się samolotem.
+               Dzięki temu linia nie „teleportuje się” dopiero przy
+               kolejnym odświeżeniu ADS-B.
+            */
+            if(
+                !isMapZooming &&
+                document.getElementById("showRoute")?.checked
+            ){
+                const line = flightPathLines.get(f.icao);
+                const history = flightHistories.get(f.icao);
 
-                entry.cur[1] +=
-                    dLon * 0.06;
-
-
-                entry.marker.setLatLng(
-                    entry.cur
-                );
-
+                if(
+                    line &&
+                    history &&
+                    history.length >= 2
+                ){
+                    line.setLatLngs([
+                        ...history,
+                        entry.cur.slice()
+                    ]);
+                }
             }
 
         }
@@ -7928,6 +8095,15 @@ document
         render;
 
 
+["onlyAirborne","onlyGround","onlyEmergency","onlyHeli"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.onchange = render;
+});
+
+const borderCb = document.getElementById("showPolandBorder");
+if(borderCb) borderCb.onchange = applyPolandBorder;
+
+
 /* =========================================================
    NAZWY MIAST NA MAPIE
 ========================================================= */
@@ -8472,6 +8648,8 @@ if(isMobileView()){
 renderAirports();
 
 applyCityLabelsSetting();
+
+applyPolandBorder();
 
 /* Język – start + zmiana */
 applyLanguage();
