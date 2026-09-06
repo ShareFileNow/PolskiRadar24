@@ -3278,6 +3278,83 @@ function getPlaneSvg(color){
 }
 
 
+/* Helikopter – widok z góry: 4 skrzyżowane łopaty wirnika + krótki kadłub + ogon */
+function getHelicopterSvg(color){
+
+    return `
+        <svg
+            viewBox="0 0 24 24"
+            width="36"
+            height="36"
+            fill="${color}"
+            aria-hidden="true"
+            data-icon="heli"
+        >
+            <!-- dokładnie 4 łopaty w układzie X (dwa pręty = 4 końce) -->
+            <g transform="translate(12 9)">
+                <rect x="-0.7" y="-9.5" width="1.4" height="19" rx="0.7" transform="rotate(45)"/>
+                <rect x="-0.7" y="-9.5" width="1.4" height="19" rx="0.7" transform="rotate(-45)"/>
+            </g>
+            <!-- piasta -->
+            <circle cx="12" cy="9" r="1.7"/>
+            <!-- kadłub – krótki, zaokrąglony (nie jak samolot) -->
+            <path d="
+                M10.3 7.2
+                L10.3 15.6
+                Q10.3 17.5 12 18.1
+                Q13.7 17.5 13.7 15.6
+                L13.7 7.2
+                Q13.7 5.9 12 5.5
+                Q10.3 5.9 10.3 7.2
+                Z
+            "/>
+            <!-- belka ogonowa -->
+            <rect x="11.25" y="15.2" width="1.5" height="5.8" rx="0.5"/>
+            <!-- statecznik poziomy – symetryczny, bez wystającego wirnika z boku -->
+            <rect x="8.6" y="19.7" width="6.8" height="1.35" rx="0.4"/>
+        </svg>
+    `;
+
+}
+
+
+function isRotorcraft(f){
+
+    if(!f) return false;
+
+    const cat = parseCategory(f.category).name;
+    if(cat === "ROTORCRAFT")
+        return true;
+
+    const type = String(f.type || "").toUpperCase();
+    const model = String(f.model || "").toUpperCase();
+    const call = String(f.call || "").toUpperCase();
+
+    const heliHints = [
+        "HELI", "HELICOPTER", "ROTOR", "Heli",
+        "EC35", "EC45", "EC55", "EC75", "EC15", "EC22",
+        "AS35", "AS36", "A139", "A189", "A169", "A109",
+        "B06", "B407", "B412", "B429", "B505", "R22", "R44", "R66",
+        "S76", "S92", "MI8", "MI17", "MI24", "KA32",
+        "H125", "H130", "H135", "H145", "H155", "H160", "H175", "H215", "H225",
+        "AW109", "AW139", "AW169", "AW189",
+        "UH60", "UH1", "CH47", "AH64"
+    ];
+
+    for(const hint of heliHints){
+        if(
+            type.includes(hint) ||
+            model.includes(hint) ||
+            call.startsWith(hint)
+        )
+            return true;
+    }
+
+    return false;
+
+}
+
+
 /* =========================================================
    STATUS LOTU
 ========================================================= */
@@ -6550,6 +6627,7 @@ function render(){
 
 
         const isVehicle = isGroundVehicle(f);
+        const isHeli = !isVehicle && isRotorcraft(f);
 
 
         const vehicleIcon = `
@@ -6567,6 +6645,11 @@ function render(){
         `;
 
 
+        const aircraftIcon = isVehicle
+            ? vehicleIcon
+            : (isHeli ? getHelicopterSvg(color) : getPlaneSvg(color));
+
+
         const html = `
 
             <div
@@ -6576,14 +6659,10 @@ function render(){
                         ${isVehicle ? 0 : rotation}deg
                     );
                 "
-                title="${headingText}${isVehicle ? ' • POJAZD NAZIEMNY' : ''}"
+                title="${headingText}${isVehicle ? ' • POJAZD NAZIEMNY' : (isHeli ? ' • HELIKOPTER' : '')}"
             >
 
-                ${
-                    isVehicle
-                    ? vehicleIcon
-                    : getPlaneSvg(color)
-                }
+                ${aircraftIcon}
 
             </div>
 
@@ -6724,18 +6803,21 @@ function render(){
                 if(plane){
 
                     const vehicleNow = isGroundVehicle(f);
+                    const heliNow = !vehicleNow && isRotorcraft(f);
 
                     plane.style.transform =
                         `rotate(${vehicleNow ? 0 : rotation}deg)`;
 
 
                     plane.title =
-                        headingText + (vehicleNow ? " • POJAZD NAZIEMNY" : "");
+                        headingText +
+                        (vehicleNow ? " • POJAZD NAZIEMNY" : (heliNow ? " • HELIKOPTER" : ""));
 
 
-                    /* Jeśli typ ikony się zmienił (samolot ↔ pojazd), przebuduj zawartość */
-                    const hasSvg = !!plane.querySelector("svg");
+                    /* Samolot ↔ helikopter ↔ pojazd – przebuduj ikonę gdy trzeba */
                     const hasCar = plane.textContent.includes("🚗");
+                    const hasSvg = !!plane.querySelector("svg");
+                    const isHeliSvg = hasSvg && plane.querySelector("svg")?.getAttribute("data-icon") === "heli";
 
                     if(vehicleNow && !hasCar){
                         plane.innerHTML = `
@@ -6745,9 +6827,11 @@ function render(){
                                 filter:drop-shadow(0 2px 5px rgba(0,0,0,.9));line-height:1;
                             ">🚗</div>
                         `;
-                    }else if(!vehicleNow && !hasSvg){
+                    }else if(heliNow && (!hasSvg || !isHeliSvg || hasCar)){
+                        plane.innerHTML = getHelicopterSvg(color);
+                    }else if(!vehicleNow && !heliNow && (hasCar || isHeliSvg || !hasSvg)){
                         plane.innerHTML = getPlaneSvg(color);
-                    }else if(!vehicleNow){
+                    }else if(!vehicleNow && hasSvg){
                         const svg = plane.querySelector("svg");
                         if(svg){
                             svg.setAttribute("fill", color);
