@@ -7351,3 +7351,1162 @@ function updateLiveCard(f){
 
     const headingEl =
         card.querySelector(
+            ".compass-heading"
+        );
+
+
+    if(headingEl){
+
+        headingEl.innerHTML =
+            `
+            ${
+                heading !== null
+                ?
+                Math.round(
+                    heading
+                )
+                +
+                "°"
+                :
+                "—"
+            }
+
+            <small>
+
+                ${
+                    heading !== null
+                    ?
+                    getCompassDirection(
+                        heading
+                    )
+                    :
+                    ""
+                }
+
+            </small>
+            `;
+
+    }
+
+
+    const needle =
+        card.querySelector(
+            ".compass-needle"
+        );
+
+
+    if(
+        needle &&
+        heading !== null
+    ){
+
+        needle.style.transform =
+            `rotate(${heading}deg)`;
+
+    }
+
+
+    const compassSubs =
+        card.querySelectorAll(
+            ".compass-sub"
+        );
+
+
+    if(
+        compassSubs.length >= 2
+    ){
+
+        compassSubs[0].textContent =
+            flightHistory.length >= 2
+            ?
+            t("path_source")
+            :
+            "ADS-B";
+
+
+        compassSubs[1].textContent =
+            getFlightTrend(
+                f.rate
+            );
+
+    }
+
+
+    /* Aktualizacja badge statusu (NA ZIEMI / W POWIETRZU) na żywo – bez przebudowy całej karty */
+    const statusBadge = card.querySelector(".badge-row .badge:last-child");
+    if(statusBadge){
+        const statusText = f.ground ? t("ground_label") : t("air_label");
+        const statusColor = f.ground ? "#f5a623" : "#26d07c";
+        statusBadge.textContent = statusText;
+        statusBadge.style.color = statusColor;
+        statusBadge.style.borderColor = statusColor;
+    }
+
+
+    /* Kolor kropki przy callsign */
+    const callDot = card.querySelector("h2 span");
+    if(callDot && callDot.style){
+        const altColor = getAltitudeColor(f.alt, f.ground);
+        callDot.style.background = altColor;
+        callDot.style.boxShadow = `0 0 8px ${altColor}`;
+    }
+
+}
+
+
+/* =========================================================
+   ŁADOWANIE DANYCH
+========================================================= */
+
+async function load(){
+
+    const btn =
+        document.getElementById(
+            "refreshBtn"
+        );
+
+
+    btn.classList.add(
+        "spin"
+    );
+
+
+    setStatus(
+        t("status_fetch"),
+        ""
+    );
+
+
+    try{
+
+        const response =
+    await fetch(
+        "https://flight-radar-backend.onrender.com/api/flights?t=" +
+        Date.now(),
+        {
+            cache: "no-store"
+        }
+    );
+
+
+        if(!response.ok)
+            throw new Error(
+                "HTTP " +
+                response.status
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(!data.ok)
+            throw new Error(
+                data.error ||
+                "API error"
+            );
+
+
+        flights =
+            (data.flights || [])
+
+            .map(
+                item => ({
+
+                    icao:
+                        item.icao24,
+
+                    call:
+                        item.callsign,
+
+                    reg:
+                        item.reg,
+
+                    type:
+                        item.type,
+
+                    model:
+                        item.model,
+
+                    manufacturer:
+                        item.manufacturer,
+
+                    operator:
+                        item.operator,
+
+                    country:
+                        item.country,
+
+                    lat:
+                        toNumber(
+                            item.lat
+                        ),
+
+                    lon:
+                        toNumber(
+                            item.lon
+                        ),
+
+                    alt:
+                        feetToMeters(
+                            item.altitude
+                        ),
+
+                    sourceGround:
+                        isGroundAltitude(
+                            item.altitude
+                        ),
+
+                    ground:false,
+
+                    speed:
+                        knotsToMetersPerSecond(
+                            item.speed
+                        ),
+
+                    track:
+                        normalizeHeading(
+                            item.heading ??
+                            item.track
+                        ),
+
+                    rate:
+                        feetPerMinuteToMetersPerSecond(
+                            item.vertical_rate
+                        ),
+
+                    squawk:
+                        item.squawk,
+
+                    category:
+                        item.category,
+
+                    lastContact:
+                        toNumber(
+                            item.last_contact
+                        ),
+
+                    source:
+                        item.source ||
+                        "ADS-B"
+
+                })
+            )
+
+            .filter(
+                f =>
+                    Number.isFinite(f.lat) &&
+                    Number.isFinite(f.lon)
+            );
+
+
+        lastLoadTime =
+            new Date();
+
+
+        updateAirportGroundStatuses();
+
+
+        updateFlightTelemetry();
+
+
+        const locale = currentLang === "en" ? "en-GB" : "pl-PL";
+        setStatus(
+            t("status_online") + " • " +
+            flights.length
+                .toLocaleString(locale) +
+            " " + t("aircraft") + " • " +
+            lastLoadTime
+                .toLocaleTimeString(locale),
+            "ok"
+        );
+
+
+        /*
+            Tutaj render() zapisuje pozycję
+            KAŻDEGO samolotu.
+        */
+
+        render();
+
+
+    }catch(error){
+
+        console.error(
+            "FLIGHT RADAR:",
+            error
+        );
+
+
+        setStatus(
+            t("status_error") + ": " +
+            error.message,
+            "err"
+        );
+
+
+        showToast(
+            t("toast_error")
+        );
+
+
+    }finally{
+
+        setTimeout(
+            () =>
+                btn.classList.remove(
+                    "spin"
+                ),
+            400
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+    text,
+    type=""
+){
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent =
+            text;
+
+
+    document
+        .getElementById(
+            "dot"
+        )
+        .className =
+            "dot " +
+            type;
+
+}
+
+
+function showToast(text){
+
+    const wrap =
+        document.getElementById(
+            "toastWrap"
+        );
+
+
+    const el =
+        document.createElement(
+            "div"
+        );
+
+
+    el.className =
+        "toast";
+
+
+    el.innerHTML =
+        `
+        ⚠
+        ${escapeHtml(text)}
+        `;
+
+
+    wrap.appendChild(
+        el
+    );
+
+
+    setTimeout(
+        () => {
+
+            el.style.transition =
+                "opacity .3s";
+
+
+            el.style.opacity =
+                "0";
+
+
+            setTimeout(
+                () =>
+                    el.remove(),
+                300
+            );
+
+        },
+        3500
+    );
+
+}
+
+
+/* =========================================================
+   TABY SIDEBARA
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".sidebar-tab"
+    )
+    .forEach(
+        tab => {
+
+            tab.onclick = () => {
+
+                document
+                    .querySelectorAll(
+                        ".sidebar-tab"
+                    )
+                    .forEach(
+                        t =>
+                            t.classList
+                            .remove(
+                                "active"
+                            )
+                    );
+
+
+                document
+                    .querySelectorAll(
+                        ".sidebar-pane"
+                    )
+                    .forEach(
+                        p =>
+                            p.classList
+                            .remove(
+                                "active"
+                            )
+                    );
+
+
+                tab.classList.add(
+                    "active"
+                );
+
+
+                document
+                    .getElementById(
+                        tab.dataset.tab ===
+                        "filters"
+                        ?
+                        "paneFilters"
+                        :
+                        "paneList"
+                    )
+                    .classList
+                    .add(
+                        "active"
+                    );
+
+
+                if(
+                    tab.dataset.tab ===
+                    "list"
+                )
+                    renderFlightList();
+
+            };
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "listSearch"
+    )
+    .addEventListener(
+        "input",
+        renderFlightList
+    );
+
+
+/* =========================================================
+   SZUKANIE
+========================================================= */
+
+const searchInput =
+    document.getElementById(
+        "search"
+    );
+
+
+searchInput.addEventListener(
+    "input",
+    function(){
+
+        render();
+
+        renderSuggestions();
+
+    }
+);
+
+
+searchInput.addEventListener(
+    "focus",
+    renderSuggestions
+);
+
+
+document.addEventListener(
+    "click",
+    e => {
+
+        if(
+            !e.target.closest(
+                ".search-wrap"
+            )
+        ){
+
+            document
+                .getElementById(
+                    "suggestBox"
+                )
+                .classList
+                .remove(
+                    "show"
+                );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   BUTTONY
+========================================================= */
+
+document
+    .getElementById(
+        "refreshBtn"
+    )
+    .onclick =
+        load;
+
+
+document
+    .getElementById(
+        "labels"
+    )
+    .onchange =
+        render;
+
+
+document
+    .getElementById(
+        "showAirports"
+    )
+    .onchange =
+        render;
+
+
+/* =========================================================
+   NAZWY MIAST NA MAPIE
+========================================================= */
+
+function applyCityLabelsSetting(){
+
+    const show =
+        document
+        .getElementById(
+            "cityLabels"
+        )
+        .checked;
+
+
+    document.body.classList.toggle(
+        "hide-city-labels",
+        !show
+    );
+
+}
+
+
+document
+    .getElementById(
+        "cityLabels"
+    )
+    .onchange =
+        applyCityLabelsSetting;
+
+
+/* =========================================================
+   ROUTE TOGGLE
+========================================================= */
+
+document
+    .getElementById(
+        "showRoute"
+    )
+    .onchange =
+        () => {
+
+            /*
+                Teraz przełącznik steruje
+                WSZYSTKIMI liniami, a nie tylko
+                wybranym samolotem.
+            */
+
+            renderAllFlightPaths();
+
+        };
+
+
+/* =========================================================
+   AUTO FOLLOW
+========================================================= */
+
+document
+    .getElementById(
+        "autoFollow"
+    )
+    .onchange =
+        function(){
+
+            if(!this.checked){
+
+                followMode = false;
+
+
+                document
+                    .getElementById(
+                        "followIndicator"
+                    )
+                    .classList
+                    .add(
+                        "hidden"
+                    );
+
+            }else if(selected){
+
+                followMode = true;
+
+
+                document
+                    .getElementById(
+                        "followIndicator"
+                    )
+                    .classList
+                    .remove(
+                        "hidden"
+                    );
+
+            }
+
+        };
+
+
+/* =========================================================
+   MAPA / SATELITA
+========================================================= */
+
+document
+    .getElementById(
+        "radarBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                map.hasLayer(
+                    satelliteLayer
+                )
+            )
+                map.removeLayer(
+                    satelliteLayer
+                );
+
+
+            if(
+                !map.hasLayer(
+                    radarLayer
+                )
+            )
+                radarLayer.addTo(
+                    map
+                );
+
+
+            this.classList.add(
+                "active"
+            );
+
+
+            document
+                .getElementById(
+                    "satBtn"
+                )
+                .classList
+                .remove(
+                    "active"
+                );
+
+        };
+
+
+document
+    .getElementById(
+        "satBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                map.hasLayer(
+                    radarLayer
+                )
+            )
+                map.removeLayer(
+                    radarLayer
+                );
+
+
+            if(
+                !map.hasLayer(
+                    satelliteLayer
+                )
+            )
+                satelliteLayer.addTo(
+                    map
+                );
+
+
+            this.classList.add(
+                "active"
+            );
+
+
+            document
+                .getElementById(
+                    "radarBtn"
+                )
+                .classList
+                .remove(
+                    "active"
+                );
+
+        };
+
+
+/* =========================================================
+   GEOLOKALIZACJA
+========================================================= */
+
+document
+    .getElementById(
+        "locateBtn"
+    )
+    .onclick =
+        function(){
+
+            if(
+                !navigator.geolocation
+            ){
+
+                showToast(
+                    t("toast_geo")
+                );
+
+                return;
+
+            }
+
+
+            navigator
+                .geolocation
+                .getCurrentPosition(
+
+                    position => {
+
+                        const lat =
+                            position.coords
+                            .latitude;
+
+
+                        const lon =
+                            position.coords
+                            .longitude;
+
+
+                        L.circleMarker(
+                            [
+                                lat,
+                                lon
+                            ],
+                            {
+                                radius:9,
+
+                                color:"#25c7ff",
+
+                                fillColor:"#25c7ff",
+
+                                fillOpacity:.9,
+
+                                weight:3
+                            }
+                        ).addTo(
+                            map
+                        );
+
+
+                        map.flyTo(
+                            [
+                                lat,
+                                lon
+                            ],
+                            9,
+                            {
+                                duration:.8
+                            }
+                        );
+
+                    },
+
+
+                    () =>
+                        showToast(
+                            t("toast_pos")
+                        )
+
+                );
+
+        };
+
+
+/* =========================================================
+   MAP DRAG
+========================================================= */
+
+map.on(
+    "dragstart",
+    () => {
+
+        if(selected){
+
+            followMode = false;
+
+
+            document
+                .getElementById(
+                    "followIndicator"
+                )
+                .classList
+                .add(
+                    "hidden"
+                );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   KLAWIATURA
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        )
+            closeCard();
+
+
+        if(
+            event.key.toLowerCase() ===
+            "r" &&
+            event.target.tagName !==
+            "INPUT"
+        )
+            load();
+
+    }
+);
+
+
+/* =========================================================
+   MOBILE BOTTOM SHEET (przeciąganie karty lotu)
+========================================================= */
+
+function isMobileView(){
+    return window.matchMedia("(max-width: 900px)").matches;
+}
+
+let sheetDragState = null;
+
+function expandMobileSheet(card){
+    if(!card) return;
+    card.classList.remove("sheet-collapsed");
+    card.classList.add("sheet-expanded");
+    card.style.transform = "";
+}
+
+function collapseMobileSheet(card){
+    if(!card) return;
+    card.classList.remove("sheet-expanded");
+    card.classList.add("sheet-collapsed");
+    card.style.transform = "";
+    card.scrollTop = 0;
+}
+
+function initMobileSheet(card){
+    if(!card || !isMobileView()) return;
+
+    card.classList.add("sheet-collapsed");
+    card.classList.remove("sheet-expanded", "sheet-dragging");
+    card.style.transform = "";
+
+    const handle = card.querySelector("#sheetHandle") || card.querySelector(".sheet-handle");
+    const photo = card.querySelector(".plane-photo-container");
+
+    /* Obsługa gestu na uchwycie i na zdjęciu */
+    const dragTargets = [handle, photo].filter(Boolean);
+
+    function onStart(clientY){
+        sheetDragState = {
+            startY: clientY,
+            lastY: clientY,
+            dy: 0,
+            expanded: card.classList.contains("sheet-expanded")
+        };
+        card.classList.add("sheet-dragging");
+    }
+
+    function onMove(clientY){
+        if(!sheetDragState) return;
+        const dy = clientY - sheetDragState.startY;
+        sheetDragState.dy = dy;
+        sheetDragState.lastY = clientY;
+
+        /* Ograniczamy ruch wizualny */
+        if(sheetDragState.expanded){
+            /* rozwijona: tylko w dół */
+            const clamped = Math.max(0, dy);
+            card.style.transform = `translateY(${clamped}px)`;
+        }else{
+            /* zwinięta: w górę (ujemne) lekko podnosi, w dół zamyka */
+            if(dy < 0){
+                const lift = Math.max(-80, dy * 0.35);
+                card.style.transform = `translateY(${lift}px)`;
+            }else{
+                card.style.transform = `translateY(${Math.min(dy, 220)}px)`;
+            }
+        }
+    }
+
+    function onEnd(){
+        if(!sheetDragState) return;
+        const dy = sheetDragState.dy;
+        const expanded = sheetDragState.expanded;
+        sheetDragState = null;
+        card.classList.remove("sheet-dragging");
+        card.style.transform = "";
+
+        if(expanded){
+            if(dy > 200){
+                /* bardzo mocno w dół → zamykamy */
+                closeCard();
+            }else if(dy > 70){
+                /* w dół → zwijamy do zdjęcia + linii */
+                collapseMobileSheet(card);
+            }
+            /* mały ruch – zostaje rozwinięta */
+        }else{
+            if(dy < -45){
+                /* w górę → rozwijamy pełne info */
+                expandMobileSheet(card);
+            }else if(dy > 100){
+                /* w dół → zamykamy kartę */
+                closeCard();
+            }
+        }
+    }
+
+    dragTargets.forEach(el => {
+        el.addEventListener("touchstart", e => {
+            if(e.touches.length !== 1) return;
+            onStart(e.touches[0].clientY);
+        }, {passive: true});
+
+        el.addEventListener("touchmove", e => {
+            if(!sheetDragState || e.touches.length !== 1) return;
+            onMove(e.touches[0].clientY);
+            /* blokujemy scroll strony przy przeciąganiu sheetu */
+            if(Math.abs(sheetDragState.dy) > 8){
+                e.preventDefault();
+            }
+        }, {passive: false});
+
+        el.addEventListener("touchend", onEnd, {passive: true});
+        el.addEventListener("touchcancel", onEnd, {passive: true});
+    });
+
+    /* Klik w hint / handle też rozwija */
+    if(handle){
+        handle.addEventListener("click", () => {
+            if(card.classList.contains("sheet-collapsed")){
+                expandMobileSheet(card);
+            }
+        });
+    }
+
+    const hint = card.querySelector(".sheet-hint");
+    if(hint){
+        hint.addEventListener("click", () => expandMobileSheet(card));
+    }
+}
+
+
+/* =========================================================
+   SIDEBAR / USTAWIENIA (otwieranie i zamykanie X)
+========================================================= */
+
+function openSidebar(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    sidebar.classList.remove("hidden-sidebar");
+    if(isMobileView()){
+        sidebar.classList.add("open");
+    }
+}
+
+function closeSidebar(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    sidebar.classList.remove("open");
+    sidebar.classList.add("hidden-sidebar");
+}
+
+document
+    .getElementById("settingsBtn")
+    .onclick = function(){
+        const sidebar = document.getElementById("sidebar");
+        if(!sidebar) return;
+        if(isMobileView()){
+            if(sidebar.classList.contains("open")){
+                closeSidebar();
+            }else{
+                openSidebar();
+            }
+        }else{
+            /* Na desktopie też można schować/pokazać panel ustawień */
+            if(sidebar.classList.contains("hidden-sidebar")){
+                sidebar.classList.remove("hidden-sidebar");
+            }else{
+                sidebar.classList.add("hidden-sidebar");
+            }
+        }
+    };
+
+document
+    .getElementById("sidebarClose")
+    .onclick = closeSidebar;
+
+/* Escape zamyka też sidebar na mobile */
+document.addEventListener("keydown", function(event){
+    if(event.key === "Escape" && isMobileView()){
+        closeSidebar();
+    }
+});
+
+window.addEventListener("resize", function(){
+    const sidebar = document.getElementById("sidebar");
+    if(!sidebar) return;
+    if(!isMobileView()){
+        sidebar.classList.remove("open");
+        /* Na desktopie panel zostaje widoczny, chyba że użytkownik go schował */
+    }else if(!sidebar.classList.contains("open")){
+        sidebar.classList.add("hidden-sidebar");
+    }
+});
+
+
+/* =========================================================
+   START
+========================================================= */
+
+/* Na telefonie domyślnie wyłączamy etykiety lotów */
+if(isMobileView()){
+    const labelsCb = document.getElementById("labels");
+    if(labelsCb){
+        labelsCb.checked = false;
+    }
+    const sidebar = document.getElementById("sidebar");
+    if(sidebar){
+        sidebar.classList.add("hidden-sidebar");
+    }
+}
+
+renderAirports();
+
+applyCityLabelsSetting();
+
+/* Język – start + zmiana */
+applyLanguage();
+
+const langSelectEl = document.getElementById("langSelect");
+if(langSelectEl){
+    langSelectEl.value = currentLang;
+    langSelectEl.addEventListener("change", function(){
+        currentLang = this.value;
+        localStorage.setItem("pfr_lang", currentLang);
+        applyLanguage();
+        /* Odśwież listę i kartę jeśli otwarta */
+        renderFlightList();
+        if(selected){
+            updateFlightCard(selected);
+        }
+        /* Status z ostatniego load */
+        if(lastLoadTime){
+            const locale = currentLang === "en" ? "en-GB" : "pl-PL";
+            setStatus(
+                t("status_online") + " • " +
+                flights.length.toLocaleString(locale) +
+                " " + t("aircraft") + " • " +
+                lastLoadTime.toLocaleTimeString(locale),
+                "ok"
+            );
+        }
+    });
+}
+
+
+/*
+    Pierwsze pobranie od razu tworzy
+    pierwsze punkty historii.
+*/
+
+load();
+
+
+/*
+    Co 5 sekund:
+
+    1. pobieramy nowe ADS-B,
+    2. zapisujemy pozycje każdego ICAO,
+    3. aktualizujemy niebieskie linie,
+    4. aktualizujemy kierunki samolotów.
+*/
+
+setInterval(
+    load,
+    5000
+);
+
+</script>
+
+</body>
+</html>
