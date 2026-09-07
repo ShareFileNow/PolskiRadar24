@@ -3547,9 +3547,24 @@ function isKnownLightAircraft(f){
        Citation i inne odrzutowce Cessny zostają STANDARD. */
     const lightCessnaCodes = /\b(?:C120|C140|C150|C152|C162|C170|C172|C175|C177|C180|C182|C185|C188|C190|C195|C205|C206|C207|C208|C210|C337|C340|C401|C402|C404|C411|C414|C421|C425|C441|C82R|C77R|C72R|C14T)\b/;
 
+    /* Tecnam P-2002 Sierra i pozostałe lekkie Tecnamy.
+       ICAO SIRA = P-2002 / P-2002 Sierra i ma kategorię LIGHT. */
+    const lightTecnamCodes = /\b(?:SIRA|P208|P212|P06T|BRAV|TWEN)\b/;
+
+    /* ICAO CRUZ = Czech Sport Aircraft PS-28 Cruiser / SportCruiser.
+       FAA klasyfikuje CRUZ jako Fixed-wing / Light. */
+    const lightCruzCode = /\bCRUZ\b/;
+
+    /* EV97 = Evektor EV-97 EuroStar / Harmony — ICAO WTC Light. */
+    const lightEvektorCodes = /\b(?:EV97|EVSS)\b/;
+
     if(
         lightCessnaCodes.test(text) ||
-        /\b(?:CESSNA|REIMS)\b/.test(text) && /\b(?:120|140|150|152|162|170|172|175|177|180|182|185|188|190|195|205|206|207|208|210|337)\b/.test(text)
+        /\b(?:CESSNA|REIMS)\b/.test(text) && /\b(?:120|140|150|152|162|170|172|175|177|180|182|185|188|190|195|205|206|207|208|210|337)\b/.test(text) ||
+        lightTecnamCodes.test(text) ||
+        lightCruzCode.test(text) ||
+        lightEvektorCodes.test(text) ||
+        /\bTECNAM\b/.test(text) && /\b(?:P[- ]?2002|P[- ]?2004|P[- ]?2008|P[- ]?2006T|P[- ]?2010|P[- ]?2012)\b/.test(text)
     )
         return true;
 
@@ -4901,6 +4916,16 @@ const aircraftTypeNames = {
     /* Inne często spotykane lekkie samoloty */
     BE23:"Beechcraft Musketeer / Sundowner", BE24:"Beechcraft Sierra", BE33:"Beechcraft Bonanza", BE35:"Beechcraft Bonanza", BE55:"Beechcraft Baron 55", BE58:"Beechcraft Baron 58", BE76:"Beechcraft Duchess", M20P:"Mooney M20", M20F:"Mooney M20F", M20J:"Mooney M20J", M20K:"Mooney M20K", M20R:"Mooney M20R Ovation", M20V:"Mooney M20V Acclaim Ultra",
     DV20:"Diamond DV20 / DA20 Katana", DA20:"Diamond DA20", DA40:"Diamond DA40 Diamond Star", DA42:"Diamond DA42 Twin Star", DA62:"Diamond DA62", SR20:"Cirrus SR20", SR22:"Cirrus SR22", SR22T:"Cirrus SR22T",
+    /* Tecnam / lekkie GA */
+    P208:"Tecnam P-2008", P212:"Tecnam P-2012 Traveller", P06T:"Tecnam P-2006T", BRAV:"Tecnam P-2004 Bravo", SIRA:"Tecnam P-2002 Sierra", TWEN:"Tecnam P-2010 Twenty-Ten",
+    /* Popularne europejskie awionetki */
+    EV97:"Evektor EV-97 Eurostar", EVSS:"Evektor EV-97", WT9:"Aerospool WT-9 Dynamic", A22:"Aeroprakt A-22 Foxbat", A32:"Aeroprakt A-32 Vixxen", A33:"Aeroprakt A-33", VL3:"JMB VL-3", FK14:"FK Lightplanes FK-14 Polaris", FK9:"FK Lightplanes FK-9", TL20:"TL Ultralight TL-2000 Sting", TL30:"TL Ultralight TL-3000 Sirius", PS28:"Flight Design CT / PS-28 Cruiser", CTLS:"Flight Design CTLS", CT2W:"Flight Design CT2SW",
+    /* Zlin / Robin / Socata / Yak / inne GA */
+    Z26:"Zlin Z-26", Z37:"Zlin Z-37", DR40:"Robin DR400", DR10:"Robin DR-100 / DR-105", R200:"Robin HR200", TB10:"Socata TB-10 Tobago", TB20:"Socata TB-20 Trinidad", TB21:"Socata TB-21 Trinidad", YK18:"Yakovlev Yak-18", YAK52:"Yakovlev Yak-52",
+    /* Ultralight / motolotnie */
+    CTSW:"Flight Design CTSW", FK12:"FK Lightplanes FK-12 Comet", SD4:"Aerospool WT-9 / Dynamic family",
+    /* Czech Sport Aircraft */
+    CRUZ:"Czech Sport Aircraft PS-28 Cruiser", PS28:"Czech Sport Aircraft PS-28 Cruiser",
     /* Helicopters */
     EC25:"Airbus Helicopters EC225 Super Puma", EC30:"Airbus Helicopters EC130", EC35:"Airbus Helicopters EC135 / H135", EC45:"Airbus Helicopters EC145 / H145", AS50:"Airbus Helicopters AS350 Ecureuil", A139:"Leonardo AW139", A169:"Leonardo AW169", A189:"Leonardo AW189", B06:"Bell 206 JetRanger", B407:"Bell 407", B412:"Bell 412", B429:"Bell 429", S76:"Sikorsky S-76", S92:"Sikorsky S-92", R22:"Robinson R22", R44:"Robinson R44", R66:"Robinson R66", H500:"MD Helicopters 500",
     /* Popular additional GA / special */
@@ -4908,6 +4933,9 @@ const aircraftTypeNames = {
 };
 
 function getAircraftManufacturer(f){
+    const directType = String(f?.type || f?.icaoType || f?.aircraftType || f?.model || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (directType === "CRUZ") return "Czech Sport Aircraft";
+
     const direct = String(f?.manufacturer || "").trim();
     if(direct && !/^(unknown|undefined|null|n\/a|—)$/i.test(direct)) return direct;
     const value = String(f?.fullModel || "").trim() || getFullAircraftName(f);
@@ -4921,6 +4949,10 @@ function getAircraftManufacturer(f){
     if(/^DE HAVILLAND\b|^DASH[- ]?8\b|^DHC[- ]?/.test(upper)) return "De Havilland Canada";
     if(/^ATR\b/.test(upper)) return "ATR";
     if(/^CESSNA\b/.test(upper)) return "Cessna";
+    if(/^TECNAM\b/.test(upper)) return "Tecnam";
+    /* ICAO code SIRA = Tecnam P-2002 Sierra; inne kody Tecnam również
+       mogą przyjść bez pola manufacturer/fullModel. */
+    if(/\b(?:SIRA|P208|P212|P06T|BRAV|TWEN)\b/.test(upper)) return "Tecnam";
     if(/^PIPER\b/.test(upper)) return "Piper";
     if(/^BEECHCRAFT\b|^BEECH\b/.test(upper)) return "Beechcraft";
     if(/^PILATUS\b/.test(upper)) return "Pilatus";
@@ -4970,119 +5002,35 @@ function getFullAircraftName(f){
     return raw || "—";
 }
 
-async function fetchPlaneSpottersAircraftMeta(reg, hex){
-
-    const urls = [];
-    if(hex) urls.push(`https://r.jina.ai/http://www.planespotters.net/hex/${encodeURIComponent(hex)}`);
-    if(reg) urls.push(`https://r.jina.ai/http://www.planespotters.net/photos/reg/${encodeURIComponent(reg)}`);
-
-    for(const url of urls){
+async function fetchAircraftOwnMeta(reg, hex){
+    /* Własne źródło metadanych: OpenAirframes — po ICAO24/HEX.
+       Zdjęcia nadal obsługuje osobny system PlaneSpotters/JetPhotos. */
+    const ids = [String(hex || '').trim().toLowerCase(), String(reg || '').trim().toUpperCase()].filter(Boolean);
+    for(const id of ids){
         try{
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 2500);
-            const response = await fetch(url, {
-                cache:"no-store",
-                signal:controller.signal
+            const timer = setTimeout(() => controller.abort(), 3500);
+            const response = await fetch(`https://api.pigeite.com/aircraft/${encodeURIComponent(id)}`, {
+                cache: 'no-store',
+                signal: controller.signal
             });
             clearTimeout(timer);
             if(!response.ok) continue;
-
-            const raw = await response.text();
-            const text = raw
-                .replace(/<[^>]+>/g, " ")
-                .replace(/\s+/g, " ")
-                .trim();
-
-            let builtYear = null;
-            let ageYears = null;
-
-            /* PlaneSpotters pokazuje dokładny wiek oraz First Flight.
-               To jest pewniejsze dla pola WIEK niż samo liczenie od roku dostawy. */
-            const ageMatch = text.match(/Age\s+([0-9]+(?:\.[0-9]+)?)\s+Years/i);
-            if(ageMatch) ageYears = Number(ageMatch[1]);
-
-            /* Najpierw rok dostawy, bo najlepiej odpowiada rocznikowi egzemplarza. */
-            const delivered = text.match(
-                /Delivered[^0-9]{0,80}(?:(?:0?[1-9]|[12]\d|3[01])\s+)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*((?:19|20)\d{2})/i
-            );
-            if(delivered) builtYear = Number(delivered[1]);
-
-            const firstFlight = text.match(/First Flight\s+(?:(?:0?[1-9]|[12]\d|3[01])\s+)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*((?:19|20)\d{2})/i);
-            if(!builtYear && firstFlight) builtYear = Number(firstFlight[1]);
-
-            const built = text.match(
-                /(?:Built|First flight)[^0-9]{0,80}(?:(?:0?[1-9]|[12]\d|3[01])\s+)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?\s*((?:19|20)\d{2})/i
-            );
-
-            if(!builtYear){
-                if(delivered) builtYear = Number(delivered[1]);
-                else if(built) builtYear = Number(built[1]);
+            const data = await response.json();
+            const a = data?.aircraft || data;
+            const year = Number(a?.year_manufactured ?? a?.year_built ?? a?.built ?? a?.yearBuilt);
+            if(Number.isFinite(year) && year >= 1900 && year <= new Date().getFullYear()){
+                return {
+                    builtYear: year,
+                    ageYears: Math.max(0, new Date().getFullYear() - year),
+                    source: 'OpenAirframes'
+                };
             }
-
-            /* Drugi wariant: tekst może mieć nagłówki jeden pod drugim. */
-            if(!builtYear){
-                const yearAnywhere = text.match(
-                    /Delivered\s+(?:[A-Za-z]{3}\s+)?((?:19|20)\d{2})/i
-                );
-                if(yearAnywhere) builtYear = Number(yearAnywhere[1]);
-            }
-
-            let fullModel = null;
-            const modelPatterns = [
-                /Aircraft Type\s+([A-Za-z0-9][^|]{2,80}?)(?=\s+(?:Airline|Company|Delivered|Status|Prev\.? Reg|Remark)\b)/i,
-                /Built as\s+([A-Za-z0-9][^|]{2,80}?)(?=\s+(?:Age|Test Registration|Production Site|Airframe Status)\b)/i
-            ];
-
-            for(const pattern of modelPatterns){
-                const m = text.match(pattern);
-                if(m && m[1]){
-                    fullModel = m[1].replace(/\s+/g, " ").trim();
-                    break;
-                }
-            }
-
-            if(!fullModel){
-                const modelMatch = raw.match(/(?:Aircraft Type|Built as)\s*\n+\s*([^\n]+)/i);
-                if(modelMatch) fullModel = modelMatch[1].replace(/<[^>]+>/g, "").trim();
-            }
-
-            if(builtYear || fullModel || ageYears !== null)
-                return {builtYear, ageYears, fullModel, source:"PlaneSpotters"};
-
         }catch(e){
-            console.warn("PlaneSpotters metadata error:", e);
+            console.warn('Own aircraft metadata error:', e);
         }
     }
-
     return null;
-}
-
-async function fetchAircraftMeta(reg, hex){
-    const primary = await fetchPlaneSpottersAircraftMeta(reg, hex);
-    if(primary && primary.builtYear && primary.fullModel && primary.ageYears !== null) return primary;
-    if(!reg) return primary;
-    try{
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 2200);
-        const response = await fetch(`https://r.jina.ai/http://www.jetphotos.com/registration/${encodeURIComponent(reg)}`, {cache:"no-store", signal:controller.signal});
-        clearTimeout(timer);
-        if(!response.ok) return primary;
-        const raw = await response.text();
-        const text = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-        const ym = text.match(/(?:Built|Delivery date|First flight)[^0-9]{0,80}((?:19|20)\d{2})/i);
-        const builtYear = ym ? Number(ym[1]) : null;
-        const mm = text.match(/(?:Aircraft Type|Aircraft)\s*[:\-]?\s*([^|]{3,90}?)(?=\s+(?:Registration|Operator|Airline|Built|Delivered|Photo|Status)\b)/i);
-        const fullModel = mm ? mm[1].replace(/\s+/g," ").trim() : null;
-        if(builtYear || fullModel){
-            return {
-                builtYear: primary?.builtYear || builtYear,
-                ageYears: primary?.ageYears ?? null,
-                fullModel: primary?.fullModel || fullModel,
-                source: primary?.source || "JetPhotos"
-            };
-        }
-    }catch(e){ console.warn("Aircraft metadata fallback error:", e); }
-    return primary;
 }
 
 function parseJetPhotosPage(text, reg){
@@ -5675,8 +5623,8 @@ async function updateFlightCard(f){
 
     /* Dane airframe'u pobieramy równolegle z fotografią — nie blokuje to karty. */
     const planeSpottersMetaPromise = (async () => {
-        const ps = await fetchPlaneSpottersAircraftMeta(f.reg, f.icao);
-        if(ps && (ps.builtYear || ps.fullModel)) return ps;
+        const ps = await fetchAircraftOwnMeta(f.reg, f.icao);
+        if(ps && (ps.builtYear || ps.fullModel || ps.ageYears !== null)) return ps;
 
         if(f.reg){
             try{
@@ -5913,16 +5861,6 @@ async function updateFlightCard(f){
                 <div>
                     <small>PEŁNA NAZWA MODELU</small>
                     <b id="aircraftFullModel">${escapeHtml(getFullAircraftName(f))}</b>
-                </div>
-
-                <div>
-                    <small>ROK</small>
-                    <b id="aircraftBuiltYear">${f.builtYear || "—"}</b>
-                </div>
-
-                <div>
-                    <small>WIEK</small>
-                    <b id="aircraftAge">${f.ageYears !== null && f.ageYears !== undefined ? f.ageYears + " lat" : (getAircraftAge(f.builtYear) !== null ? getAircraftAge(f.builtYear) + " lat" : "—")}</b>
                 </div>
 
             </div>
@@ -6557,14 +6495,15 @@ async function updateFlightCard(f){
         if(meta.fullModel && !f.fullModel) f.fullModel = meta.fullModel;
         if(meta.builtYear && !f.builtYear) f.builtYear = meta.builtYear;
         if(meta.ageYears !== null && meta.ageYears !== undefined) f.ageYears = meta.ageYears;
+        if((f.ageYears === null || f.ageYears === undefined) && f.builtYear) f.ageYears = getAircraftAge(f.builtYear);
         if(!f.manufacturer){
             const derivedManufacturer = getAircraftManufacturer(f);
             if(derivedManufacturer) f.manufacturer = derivedManufacturer;
         }
 
         const fullModelEl = document.getElementById("aircraftFullModel");
-        const yearEl = document.getElementById("aircraftBuiltYear");
-        const ageEl = document.getElementById("aircraftAge");
+        const yearEl = null;
+        const ageEl = null;
         const manufacturerEls = document.querySelectorAll("[data-aircraft-manufacturer]");
 
         if(fullModelEl) fullModelEl.textContent = getFullAircraftName(f);
@@ -6650,8 +6589,8 @@ async function updateFlightCard(f){
         f.builtYear = photo.builtYear;
 
     const fullModelEl = document.getElementById("aircraftFullModel");
-    const yearEl = document.getElementById("aircraftBuiltYear");
-    const ageEl = document.getElementById("aircraftAge");
+    const yearEl = null;
+    const ageEl = null;
     if(fullModelEl)
         fullModelEl.textContent = getFullAircraftName(f);
 
