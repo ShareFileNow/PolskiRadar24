@@ -20,17 +20,15 @@ PORT = int(os.environ.get("PORT", 8080))
 
 
 # ============================================================
-# AIRPLANES.LIVE API
+# ADS-B API
 # ============================================================
 
 AIRPLANES_LIVE_URL = (
-    "https://api.adsb.lol/v2/"
-    "lat/52.23/"
-    "lon/21.01/"
-    "dist/300"
+    "https://api.airplanes.live/v2/"
+    "point/52.23/21.01/300"
 )
 
-UPDATE_SECONDS = 2
+UPDATE_SECONDS = 5
 
 
 # ============================================================
@@ -79,7 +77,7 @@ def is_ground_altitude(value):
 
 
 # ============================================================
-# FETCH AIRPLANES.LIVE
+# FETCH ADS-B
 # ============================================================
 
 def fetch_airplanes_live():
@@ -88,7 +86,7 @@ def fetch_airplanes_live():
     global last_update
     global last_error
 
-    print("[AIRPLANES.LIVE] Pobieranie danych...")
+    print("[Airplanes.live] Pobieranie danych...")
 
     try:
 
@@ -218,7 +216,7 @@ def fetch_airplanes_live():
             last_error = ""
 
         print(
-            "[AIRPLANES.LIVE] OK - aktywne samoloty: {}".format(
+            "[ADS-B] OK - aktywne samoloty: {}".format(
                 len(cleaned)
             )
         )
@@ -234,7 +232,7 @@ def fetch_airplanes_live():
             last_error = message
 
         print(
-            "[AIRPLANES.LIVE] BŁĄD:",
+            "[ADS-B] BŁĄD:",
             message
         )
 
@@ -466,7 +464,7 @@ def main():
     )
 
     print(
-        "ADS-B: {}".format(AIRPLANES_LIVE_URL)
+        "Airplanes.live: {}".format(AIRPLANES_LIVE_URL)
     )
 
     print(
@@ -475,7 +473,7 @@ def main():
 
 
     # --------------------------------------------------------
-    # START AIRPLANES.LIVE UPDATER
+    # START ADS-B UPDATER
     # --------------------------------------------------------
 
     thread = threading.Thread(
