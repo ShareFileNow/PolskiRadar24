@@ -30,7 +30,7 @@ AIRPLANES_LIVE_URL = (
     "dist/300"
 )
 
-UPDATE_SECONDS = 5
+UPDATE_SECONDS = 2
 
 
 # ============================================================
