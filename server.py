@@ -23,9 +23,11 @@ PORT = int(os.environ.get("PORT", 8080))
 # ADS-B API
 # ============================================================
 
-AIRPLANES_LIVE_URL = (
-    "https://api.airplanes.live/v2/"
-    "point/52.23/21.01/300"
+OPENSKY_URL = (
+    "https://api.adsb.lol/v2/"
+    "lat/52.23/"
+    "lon/21.01/"
+    "dist/300"
 )
 
 UPDATE_SECONDS = 5
@@ -68,7 +70,7 @@ def to_bool(value):
 
 
 def is_ground_altitude(value):
-    """Airplanes.live może oznaczyć wysokość jako 'ground'."""
+    """adsb.lol może oznaczyć wysokość jako 'ground'."""
 
     return (
         isinstance(value, str)
@@ -80,18 +82,18 @@ def is_ground_altitude(value):
 # FETCH ADS-B
 # ============================================================
 
-def fetch_airplanes_live():
+def fetch_opensky():
 
     global states
     global last_update
     global last_error
 
-    print("[Airplanes.live] Pobieranie danych...")
+    print("[ADS-B] Pobieranie danych...")
 
     try:
 
         request = Request(
-            AIRPLANES_LIVE_URL,
+            OPENSKY_URL,
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 "
@@ -245,7 +247,7 @@ def updater():
 
     while True:
 
-        fetch_airplanes_live()
+        fetch_opensky()
 
         time.sleep(
             UPDATE_SECONDS
@@ -464,7 +466,7 @@ def main():
     )
 
     print(
-        "Airplanes.live: {}".format(AIRPLANES_LIVE_URL)
+        "ADS-B: {}".format(OPENSKY_URL)
     )
 
     print(
