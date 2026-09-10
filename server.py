@@ -20,10 +20,10 @@ PORT = int(os.environ.get("PORT", 8080))
 
 
 # ============================================================
-# ADS-B API
+# AIRPLANES.LIVE API
 # ============================================================
 
-OPENSKY_URL = (
+AIRPLANES_LIVE_URL = (
     "https://api.adsb.lol/v2/"
     "lat/52.23/"
     "lon/21.01/"
@@ -70,7 +70,7 @@ def to_bool(value):
 
 
 def is_ground_altitude(value):
-    """adsb.lol może oznaczyć wysokość jako 'ground'."""
+    """Airplanes.live może oznaczyć wysokość jako 'ground'."""
 
     return (
         isinstance(value, str)
@@ -79,21 +79,21 @@ def is_ground_altitude(value):
 
 
 # ============================================================
-# FETCH ADS-B
+# FETCH AIRPLANES.LIVE
 # ============================================================
 
-def fetch_opensky():
+def fetch_airplanes_live():
 
     global states
     global last_update
     global last_error
 
-    print("[ADS-B] Pobieranie danych...")
+    print("[AIRPLANES.LIVE] Pobieranie danych...")
 
     try:
 
         request = Request(
-            OPENSKY_URL,
+            AIRPLANES_LIVE_URL,
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 "
@@ -218,7 +218,7 @@ def fetch_opensky():
             last_error = ""
 
         print(
-            "[ADS-B] OK - aktywne samoloty: {}".format(
+            "[AIRPLANES.LIVE] OK - aktywne samoloty: {}".format(
                 len(cleaned)
             )
         )
@@ -234,7 +234,7 @@ def fetch_opensky():
             last_error = message
 
         print(
-            "[ADS-B] BŁĄD:",
+            "[AIRPLANES.LIVE] BŁĄD:",
             message
         )
 
@@ -247,7 +247,7 @@ def updater():
 
     while True:
 
-        fetch_opensky()
+        fetch_airplanes_live()
 
         time.sleep(
             UPDATE_SECONDS
@@ -466,7 +466,7 @@ def main():
     )
 
     print(
-        "ADS-B: {}".format(OPENSKY_URL)
+        "ADS-B: {}".format(AIRPLANES_LIVE_URL)
     )
 
     print(
@@ -475,7 +475,7 @@ def main():
 
 
     # --------------------------------------------------------
-    # START ADS-B UPDATER
+    # START AIRPLANES.LIVE UPDATER
     # --------------------------------------------------------
 
     thread = threading.Thread(
