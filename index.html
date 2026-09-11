@@ -4531,6 +4531,10 @@ function showAirportCard(airport){
 
     card.innerHTML = `
 
+        <div class="sheet-handle" id="sheetHandle">
+            <div class="sheet-handle-bar"></div>
+        </div>
+
         <button
             class="close-card"
             id="closeCard"
@@ -4833,6 +4837,9 @@ function showAirportCard(airport){
             () =>
                 closeCard();
 
+
+    /* Na telefonie lotnisko zachowuje się jak karta samolotu — można je rozsunąć. */
+    initMobileSheet(card);
 
     card
         .querySelectorAll(
@@ -9188,7 +9195,7 @@ function initMobileSheet(card){
     card.style.transform = "";
 
     const handle = card.querySelector("#sheetHandle") || card.querySelector(".sheet-handle");
-    const photo = card.querySelector(".plane-photo-container");
+    const photo = card.querySelector(".plane-photo-container, .airport-photo-container");
 
     /* Obsługa gestu na uchwycie i na zdjęciu */
     const dragTargets = [handle, photo].filter(Boolean);
