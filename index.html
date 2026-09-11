@@ -111,15 +111,24 @@ body{
 }
 
 .brand-icon{
-    width:34px;
-    height:34px;
+    width:48px;
+    height:48px;
     border-radius:10px;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:linear-gradient(135deg,#1a6cff,#2fb8ff);
-    box-shadow:0 0 18px rgba(47,184,255,.55);
+    background:transparent;
+    box-shadow:none;
     font-size:16px;
+    overflow:hidden;
+    padding:0;
+}
+
+.brand-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
 }
 
 .brand{
@@ -962,7 +971,7 @@ body{
     transition:filter .2s;
 }
 
-.plane-icon-svg svg[data-icon="light"]{width:21px;height:21px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.9));}
+.plane-icon-svg svg[data-icon="light"]{width:23px;height:23px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.9));}
 
 .plane-marker.selected .plane-icon-svg svg{
     filter:
@@ -1034,6 +1043,61 @@ body{
 body.hide-city-labels .airport-label{
     display:none;
 }
+
+/* ================= POGODA LOTNISKA ================= */
+.airport-photo-container{
+    width:100%;
+    height:180px;
+    border-radius:12px;
+    overflow:hidden;
+    background:#071326;
+    margin-bottom:10px;
+    position:relative;
+}
+.airport-photo-container img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+.airport-photo-loading{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:11px;
+    background:linear-gradient(135deg,#071326,#0d1f38);
+}
+.airport-weather{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:12px;
+    align-items:center;
+    background:#071326;
+    border:1px solid #102038;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+}
+.airport-weather-icon{font-size:32px;line-height:1;}
+.airport-weather-temp{font-size:24px;font-weight:900;color:#fff;}
+.airport-weather-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.airport-weather-grid{
+    grid-column:1 / -1;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+}
+.airport-weather-grid div{
+    background:#0a1830;
+    border-radius:8px;
+    padding:7px;
+    font-size:10px;
+    color:#b9cbe3;
+}
+.airport-weather-grid b{display:block;color:#fff;font-size:11px;margin-top:2px;}
 
 /* ================= PRZYCISK ATC ================= */
 
@@ -1303,7 +1367,7 @@ body.hide-city-labels .airport-label{
 
     <div class="brand-wrap">
 
-        <div class="brand-icon">✈</div>
+        <div class="brand-icon"><img src="polradlogo.png" alt="Polrad logo"></div>
 
         <div>
             <div class="brand">
@@ -1339,7 +1403,7 @@ body.hide-city-labels .airport-label{
         <button
             class="iconbtn"
             id="settingsBtn"
-            title="Ustawienia"
+            title="Ustawienia" data-i18n-title="settings"
         >
             ⚙
         </button>
@@ -1551,15 +1615,7 @@ body.hide-city-labels .airport-label{
             </div>
 
             <div class="toggle-row">
-                <span class="toggle-label">Granica Polski</span>
-                <label class="switch">
-                    <input type="checkbox" id="showPolandBorder" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-
-            <div class="toggle-row">
-                <span class="toggle-label">Wszystkie loty</span>
+                <span class="toggle-label" data-i18n="all_flights">Wszystkie loty</span>
                 <label class="switch">
                     <input type="checkbox" id="showAllFlights" checked>
                     <span class="slider"></span>
@@ -1567,7 +1623,7 @@ body.hide-city-labels .airport-label{
             </div>
 
             <div class="toggle-row">
-                <span class="toggle-label">Tylko w powietrzu</span>
+                <span class="toggle-label" data-i18n="only_airborne">Tylko w powietrzu</span>
                 <label class="switch">
                     <input type="checkbox" id="onlyAirborne">
                     <span class="slider"></span>
@@ -1575,7 +1631,7 @@ body.hide-city-labels .airport-label{
             </div>
 
             <div class="toggle-row">
-                <span class="toggle-label">Tylko na ziemi</span>
+                <span class="toggle-label" data-i18n="only_ground">Tylko na ziemi</span>
                 <label class="switch">
                     <input type="checkbox" id="onlyGround">
                     <span class="slider"></span>
@@ -1583,7 +1639,7 @@ body.hide-city-labels .airport-label{
             </div>
 
             <div class="toggle-row">
-                <span class="toggle-label">Squawk alarmowy (75/76/77)</span>
+                <span class="toggle-label" data-i18n="emergency_squawk">Squawk alarmowy (75/76/77)</span>
                 <label class="switch">
                     <input type="checkbox" id="onlyEmergency">
                     <span class="slider"></span>
@@ -1591,7 +1647,7 @@ body.hide-city-labels .airport-label{
             </div>
 
             <div class="toggle-row">
-                <span class="toggle-label">Tylko helikoptery</span>
+                <span class="toggle-label" data-i18n="only_helicopters">Tylko helikoptery</span>
                 <label class="switch">
                     <input type="checkbox" id="onlyHeli">
                     <span class="slider"></span>
@@ -1605,7 +1661,7 @@ body.hide-city-labels .airport-label{
             <div class="alt-gradient"></div>
 
             <div class="alt-gradient-labels">
-                <span>Ziemia</span>
+                <span data-i18n="ground">Ziemia</span>
                 <span>5k ft</span>
                 <span>15k ft</span>
                 <span>25k ft</span>
@@ -1745,29 +1801,25 @@ const satelliteLayer = L.tileLayer(
     }
 ).addTo(map);
 
+/* Przezroczysta warstwa referencyjna Esri — nazwy miast działają także
+   na satelicie, bez zasłaniania zdjęć terenu. */
+const satelliteLabelsLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+    {
+        maxZoom:19,
+        opacity:0.95,
+        pane:"overlayPane",
+        attribution:"&copy; Esri"
+    }
+).addTo(map);
 
-function initPolandBorder(){
-    if(polandBorderLayer) return;
-    polandBorderLayer = L.geoJSON(polandBorderGeoJSON, {
-        style: {
-            color: "#d0d0d0",
-            weight: 2.5,
-            opacity: 0.95,
-            fillColor: "#d0d0d0",
-            fillOpacity: 0.02
-        },
-        interactive: false
-    });
-}
-
-function applyPolandBorder(){
-    initPolandBorder();
-    const on = document.getElementById("showPolandBorder");
-    if(on && on.checked){
-        if(!map.hasLayer(polandBorderLayer))
-            polandBorderLayer.addTo(map);
-    }else if(polandBorderLayer && map.hasLayer(polandBorderLayer)){
-        map.removeLayer(polandBorderLayer);
+function applySatelliteLabels(){
+    const show = document.getElementById("cityLabels")?.checked !== false;
+    const satelliteOn = map.hasLayer(satelliteLayer);
+    if(show && satelliteOn){
+        if(!map.hasLayer(satelliteLabelsLayer)) satelliteLabelsLayer.addTo(map);
+    }else if(map.hasLayer(satelliteLabelsLayer)){
+        map.removeLayer(satelliteLabelsLayer);
     }
 }
 
@@ -1817,6 +1869,7 @@ const translations = {
         path_source: "Niebieski tor lotu",
         last_contact: "Ostatni kontakt",
         lbl_operator: "Operator",
+        no_photo: "Brak zdjęcia",
         lbl_manufacturer: "Producent",
         lbl_model: "Model",
         lbl_altitude: "Wysokość",
@@ -1853,7 +1906,55 @@ const translations = {
         drag_hint: "↑ Przeciągnij w górę, aby zobaczyć więcej",
         no_callsign: "BRAK CALLSIGN",
         registration: "Rejestracja",
-        aircraft: "samolotów"
+        aircraft: "samolotów",
+        all_flights: "Wszystkie loty",
+        only_airborne: "Tylko w powietrzu",
+        only_ground: "Tylko na ziemi",
+        emergency_squawk: "Squawk alarmowy (75/76/77)",
+        only_helicopters: "Tylko helikoptery",
+        ground: "Ziemia",
+        full_model_name: "PEŁNA NAZWA MODELU",
+        lbl_altitude_short: "Wysokość",
+        refresh: "Odśwież (R)",
+        settings: "Ustawienia",
+        airport_loading_photo: "📷 Ładowanie zdjęcia lotniska…",
+        airport_loading_weather: "Ładowanie pogody…",
+        wind: "Wiatr",
+        humidity: "Wilgotność",
+        feels_like: "Odczuwalna",
+        city: "Miasto",
+        country: "Kraj",
+        airport_elevation: "Wysokość lotniska",
+        runway: "Pas(y) startowy",
+        position: "Pozycja",
+        aircraft_35km: "Samoloty w promieniu 35 km",
+        in_air: "W powietrzu",
+        on_ground_short: "Na ziemi",
+        last_refresh: "Ostatnie odświeżenie",
+        airport_zone_count: "W strefie lotniska",
+        airborne_count: "W powietrzu",
+        ground_count: "Na ziemi",
+        nearby_movement: "RUCH W POBLIŻU LOTNISKA",
+        listen_atc: "Posłuchaj ATC (LiveATC.net)",
+        no_nearby_aircraft: "Brak samolotów w pobliżu.",
+        heading_short: "Kurs",
+        speed_short: "Prędkość",
+        status_short: "Status",
+        no_saved_events: "Brak zapisanych zdarzeń",
+        loading_photo: "Brak zdjęcia lotniska",
+        no_weather_description: "Brak opisu",
+        clear: "Bezchmurnie",
+        cloudy: "Zachmurzenie",
+        fog: "Mgła",
+        drizzle: "Mżawka",
+        rain: "Deszcz",
+        snow: "Śnieg",
+        rain_showers: "Przelotny deszcz",
+        snow_showers: "Przelotny śnieg",
+        thunderstorm: "Burza",
+        event_detected: "📡 Wykryto w radarze",
+        event_landing: "🛬 Lądowanie / postój na ziemi",
+        event_takeoff: "🛫 Start / opuszczenie lotniska"
     },
     en: {
         visible_flights: "Visible flights",
@@ -1895,6 +1996,7 @@ const translations = {
         path_source: "Blue flight path",
         last_contact: "Last contact",
         lbl_operator: "Operator",
+        no_photo: "No photo",
         lbl_manufacturer: "Manufacturer",
         lbl_model: "Model",
         lbl_altitude: "Altitude",
@@ -1931,11 +2033,60 @@ const translations = {
         drag_hint: "↑ Drag up for more details",
         no_callsign: "NO CALLSIGN",
         registration: "Registration",
-        aircraft: "aircraft"
+        aircraft: "aircraft",
+        all_flights: "All flights",
+        only_airborne: "Airborne only",
+        only_ground: "Ground only",
+        emergency_squawk: "Emergency squawk (75/76/77)",
+        only_helicopters: "Helicopters only",
+        ground: "Ground",
+        full_model_name: "FULL MODEL NAME",
+        lbl_altitude_short: "Altitude",
+        refresh: "Refresh (R)",
+        settings: "Settings",
+        airport_loading_photo: "📷 Loading airport photo…",
+        airport_loading_weather: "Loading weather…",
+        wind: "Wind",
+        humidity: "Humidity",
+        feels_like: "Feels like",
+        city: "City",
+        country: "Country",
+        airport_elevation: "Airport elevation",
+        runway: "Runway(s)",
+        position: "Position",
+        aircraft_35km: "Aircraft within 35 km",
+        in_air: "In the air",
+        on_ground_short: "On ground",
+        last_refresh: "Last refresh",
+        airport_zone_count: "In airport zone",
+        airborne_count: "In the air",
+        ground_count: "On ground",
+        nearby_movement: "TRAFFIC NEAR AIRPORT",
+        listen_atc: "Listen to ATC (LiveATC.net)",
+        no_nearby_aircraft: "No aircraft nearby.",
+        heading_short: "Heading",
+        speed_short: "Speed",
+        status_short: "Status",
+        no_saved_events: "No saved events",
+        loading_photo: "No airport photo",
+        no_weather_description: "No description",
+        clear: "Clear sky",
+        cloudy: "Cloudy",
+        fog: "Fog",
+        drizzle: "Drizzle",
+        rain: "Rain",
+        snow: "Snow",
+        rain_showers: "Rain showers",
+        snow_showers: "Snow showers",
+        thunderstorm: "Thunderstorm",
+        event_detected: "📡 Detected on radar",
+        event_landing: "🛬 Landing / ground stop",
+        event_takeoff: "🛫 Takeoff / leaving airport"
     }
 };
 
-let currentLang = localStorage.getItem("pfr_lang") || "pl";
+let currentLang = "pl";
+localStorage.setItem("pfr_lang", "pl");
 
 function t(key){
     return (translations[currentLang] && translations[currentLang][key]) ||
@@ -1949,6 +2100,11 @@ function applyLanguage(){
         if(key && translations[currentLang][key]){
             el.textContent = translations[currentLang][key];
         }
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach(el => {
+        const key = el.getAttribute("data-i18n-title");
+        if(key) el.title = t(key);
     });
 
     const search = document.getElementById("search");
@@ -2044,6 +2200,11 @@ const airportGroundTimers = new Map();
 const AIRPORT_GROUND_RADIUS_KM = 2;
 const AIRPORT_GROUND_DELAY_MS = 0; /* natychmiastowy status na ziemi – bez czekania na odświeżenie */
 
+/* ANTI-LAG / NO-BACKTRACK: wizualny ruch działa stale, ale ciężkie operacje
+   Leaflet są ograniczone. Nowy ADS-B nie może cofnąć markera za przewidywaną pozycję. */
+const MOTION_FPS = 30;
+const ROUTE_UPDATE_MS = 180;
+
 
 /* =========================================================
    LOTNISKA
@@ -2076,7 +2237,7 @@ const majorAirports = [
     { name:"Lotnisko Aeroklubu Warszawskiego – Chrcynno", icao:"EPCH", iata:"—", city:"Chrcynno", country:"Polska", lat:52.5750, lon:20.6100, elev:"320 ft", runways:["09/27 — 800 m"] },
     { name:"Lotnisko Pobiednik Wielki (Kraków)", icao:"EPKP", iata:"—", city:"Kraków", country:"Polska", lat:50.08690, lon:20.20166, elev:"659 ft", runways:["09R/27L — 1100 m", "09L/27R — 980 m"] },
     { name:"Lotnisko Kąkolewo (Leszno)", icao:"EPLS", iata:"—", city:"Leszno", country:"Polska", lat:51.8350, lon:16.5220, elev:"310 ft", runways:["06/24 — 1000 m"] },
-    { name:"Lotnisko Aeroklubu Poznańskiego – Kobylnica", icao:"EPKO", iata:"—", city:"Kobylnica", country:"Polska", lat:52.4360, lon:17.0100, elev:"300 ft", runways:["10/28 — 900 m"] },
+    { name:"Lotnisko Aeroklubu Poznańskiego – Kobylnica", icao:"EPKO", iata:"—", city:"Kobylnica", country:"Polska", lat:52.43389, lon:17.04389, elev:"300 ft", runways:["10/28 — 900 m"] },
     { name:"Lotnisko Aeroklubu Gdańskiego – Pruszcz", icao:"EPPR", iata:"—", city:"Pruszcz Gdański", country:"Polska", lat:54.2480, lon:18.6620, elev:"20 ft", runways:["08/26 — 2000 m"] },
     { name:"Lotnisko Mielec", icao:"EPML", iata:"—", city:"Mielec", country:"Polska", lat:50.3223, lon:21.4622, elev:"540 ft", runways:["09/27 — 2500 m"] },
     { name:"Lotnisko Świdnik", icao:"EPSW", iata:"—", city:"Świdnik", country:"Polska", lat:51.2310, lon:22.6900, elev:"620 ft", runways:["08/26 — 1200 m"] },
@@ -2104,26 +2265,7 @@ const majorAirports = [
 
 
 /* Uproszczona granica Polski (widoczna na mapie i satelicie) */
-const polandBorderGeoJSON = {
-    type: "Feature",
-    properties: { name: "Polska" },
-    geometry: {
-        type: "Polygon",
-        coordinates: [[
-            [14.12,53.33],[14.25,53.90],[14.60,54.35],[15.20,54.20],[16.00,54.50],
-            [16.80,54.55],[17.60,54.80],[18.50,54.80],[18.95,54.45],[19.50,54.40],
-            [20.20,54.50],[21.00,54.40],[21.80,54.40],[22.80,54.35],[23.50,54.20],
-            [23.90,53.90],[23.50,53.40],[23.60,52.90],[23.90,52.40],[23.50,52.00],
-            [23.20,51.50],[23.50,51.00],[24.00,50.70],[24.10,50.30],[23.50,50.00],
-            [22.90,49.50],[22.70,49.10],[22.10,49.20],[21.20,49.40],[20.00,49.20],
-            [19.00,49.40],[18.50,49.50],[17.80,50.00],[16.80,50.10],[16.00,50.30],
-            [15.20,50.80],[14.80,51.20],[14.60,51.70],[14.40,52.20],[14.20,52.70],
-            [14.12,53.33]
-        ]]
-    }
-};
 
-let polandBorderLayer = null;
 
 
 /* =========================================================
@@ -3111,6 +3253,7 @@ function getAirline(callsign){
         ["BER","Air Berlin"],
         ["GWI","Germanwings"],
         ["TUI","TUI fly"],
+        ["BLX","TUI Airlines Belgium"],
         ["HLX","Hapag-Lloyd"],
         ["ABR","ASL Airlines"],
         ["AHO","Air Hamburg"],
@@ -3428,27 +3571,24 @@ function getPlaneSvg(color){
    ale wyraźnie mniejsza i prostsza od standardowego samolotu. */
 function getLightPlaneSvg(color){
 
-    /* Mała awionetka z góry — prosta kreskowa sylwetka w stylu
-       plan-view Cessny. Bez śmigła, bez wyglądu odrzutowca/fightera. */
+    /* Wypełniona awionetka z góry — bardziej przypomina Cessnę,
+       bez dziury w środku, bez śmigła i bez sylwetki myśliwca. */
     return `
         <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill="none"
-            stroke="${color}"
-            stroke-width="1.45"
-            stroke-linecap="round"
+            viewBox="0 0 32 32"
+            width="22"
+            height="22"
+            fill="${color}"
+            stroke="rgba(0,0,0,.35)"
+            stroke-width="0.7"
             stroke-linejoin="round"
             aria-hidden="true"
             data-icon="light"
             style="transform-origin:50% 50%;overflow:visible;"
         >
-            <path d="M12 2.3 C11.25 3.1 10.95 4.35 10.9 5.75 L10.45 16.15 L12 21.1 L13.55 16.15 L13.1 5.75 C13.05 4.35 12.75 3.1 12 2.3 Z"/>
-            <path d="M10.75 8.2 L3.05 10.15 L2.45 11.05 L10.65 10.65"/>
-            <path d="M13.25 8.2 L20.95 10.15 L21.55 11.05 L13.35 10.65"/>
-            <path d="M10.85 15.1 L6.9 17.05 L7.15 17.8 L11.15 16.55"/>
-            <path d="M13.15 15.1 L17.1 17.05 L16.85 17.8 L12.85 16.55"/>
+            <path d="M16 2.2 C14.2 3.6 13.5 6.1 13.35 9.4 L13.05 13.2 L4.2 16.2 C3.35 16.5 3.35 17.7 4.2 18 L13.05 18.15 L13.8 25.1 L10.9 28.3 C10.25 29 10.75 29.9 11.65 29.55 L16 27.75 L20.35 29.55 C21.25 29.9 21.75 29 21.1 28.3 L18.2 25.1 L18.95 18.15 L27.8 18 C28.65 17.7 28.65 16.5 27.8 16.2 L18.95 13.2 L18.65 9.4 C18.5 6.1 17.8 3.6 16 2.2 Z"/>
+            <path d="M13.25 14.15 L8.4 15.95 L8.4 17.1 L13.2 16.9 Z" fill="rgba(0,0,0,.12)" stroke="none"/>
+            <path d="M18.75 14.15 L23.6 15.95 L23.6 17.1 L18.8 16.9 Z" fill="rgba(0,0,0,.12)" stroke="none"/>
         </svg>
     `;
 }
@@ -4092,14 +4232,14 @@ function updateFlightTelemetry(){
 
             events.push({
                 time: now,
-                label: "📡 Wykryto w radarze"
+                labelKey: "event_detected"
             });
 
         }else if(previous.ground !== f.ground){
 
             events.push({
                 time: now,
-                label: f.ground ? "🛬 Lądowanie / postój na ziemi" : "🛫 Start / opuszczenie lotniska"
+                labelKey: f.ground ? "event_landing" : "event_takeoff"
             });
 
         }
@@ -4278,7 +4418,11 @@ function renderAirports(){
    KARTA LOTNISKA
 ========================================================= */
 
+let currentAirportCardAirport = null;
+
 function showAirportCard(airport){
+
+    currentAirportCardAirport = airport;
 
     selected = null;
 
@@ -4409,6 +4553,24 @@ function showAirportCard(airport){
                 <b>${escapeHtml(airport.iata)}</b>
             </div>
 
+            <div class="airport-photo-container">
+                <div class="airport-photo-loading" id="airportPhotoLoading">${t("airport_loading_photo")}</div>
+                <img id="airportPhoto" alt="Zdjęcie lotniska" style="opacity:0;transition:opacity .25s;">
+            </div>
+
+            <div class="airport-weather" id="airportWeather">
+                <div class="airport-weather-icon">🌤️</div>
+                <div>
+                    <div class="airport-weather-temp">—</div>
+                    <div class="airport-weather-desc">${t("airport_loading_weather")}</div>
+                </div>
+                <div class="airport-weather-grid">
+                    <div>${t("wind")}<b>—</b></div>
+                    <div>${t("humidity")}<b>—</b></div>
+                    <div>${t("feels_like")}<b>—</b></div>
+                </div>
+            </div>
+
             ${
                 liveAtcUrl(airport)
                 ?
@@ -4420,7 +4582,7 @@ function showAirportCard(airport){
                         rel="noopener noreferrer"
                     >
                         🎧
-                        Posłuchaj ATC (LiveATC.net)
+                        ${t("listen_atc")}
                     </a>
                 `
                 :
@@ -4430,17 +4592,17 @@ function showAirportCard(airport){
             <div class="info-box">
 
                 <div>
-                    <b>Miasto:</b>
+                    <b>${t("city")}:</b>
                     ${escapeHtml(airport.city)}
                 </div>
 
                 <div>
-                    <b>Kraj:</b>
+                    <b>${t("country")}:</b>
                     ${escapeHtml(airport.country)}
                 </div>
 
                 <div>
-                    <b>Wysokość lotniska:</b>
+                    <b>${t("airport_elevation")}:</b>
                     ${escapeHtml(airport.elev)}
                 </div>
 
@@ -4464,31 +4626,31 @@ function showAirportCard(airport){
                 </div>
 
                 <div>
-                    <b>Pozycja:</b>
+                    <b>${t("position")}:</b>
                     ${airport.lat.toFixed(5)},
                     ${airport.lon.toFixed(5)}
                 </div>
 
                 <div>
-                    <b>Samoloty w promieniu 35 km:</b>
+                    <b>${t("aircraft_35km")}:</b>
                     ${nearbyTraffic.length}
                 </div>
 
                 <div>
-                    <b>W strefie lotniska (${AIRPORT_GROUND_RADIUS_KM} km):</b>
+                    <b>${t("airport_zone_count")} (${AIRPORT_GROUND_RADIUS_KM} km):</b>
                     ${airportZoneTraffic.length}
                 </div>
 
                 <div>
-                    <b>W powietrzu:</b>
+                    <b>${t("airborne_count")}:</b>
                     ${airborneTraffic.length}
                     •
-                    <b>Na ziemi:</b>
+                    <b>${t("ground_count")}:</b>
                     ${groundTraffic.length}
                 </div>
 
                 <div>
-                    <b>Ostatnie odświeżenie:</b>
+                    <b>${t("last_refresh")}:</b>
                     ${
                         lastLoadTime
                         ?
@@ -4501,7 +4663,7 @@ function showAirportCard(airport){
             </div>
 
             <div class="route-box">
-                ✈ RUCH W POBLIŻU LOTNISKA
+                ✈ ${t("nearby_movement")}
             </div>
 
             ${
@@ -4547,7 +4709,7 @@ function showAirportCard(airport){
 
                                 <br>
 
-                                Kurs:
+                                ${t("heading_short")}:
                                 <b>
                                     ${
                                         heading !== null
@@ -4568,7 +4730,7 @@ function showAirportCard(airport){
 
                                 <br>
 
-                                Wysokość:
+                                ${t("lbl_altitude_short")}:
                                 ${
                                     Number.isFinite(
                                         f.alt
@@ -4585,7 +4747,7 @@ function showAirportCard(airport){
 
                                 <br>
 
-                                Prędkość:
+                                ${t("speed_short")}:
                                 ${
                                     Number.isFinite(
                                         f.speed
@@ -4602,7 +4764,7 @@ function showAirportCard(airport){
 
                                 <br>
 
-                                Status:
+                                ${t("status_short")}:
                                 ${trend}
 
                             </div>
@@ -4616,7 +4778,7 @@ function showAirportCard(airport){
 
                 `
                     <div class="muted">
-                        Brak samolotów w pobliżu.
+                        ${t("no_nearby_aircraft")}
                     </div>
                 `
             }
@@ -4624,6 +4786,44 @@ function showAirportCard(airport){
         </div>
     `;
 
+
+    /* Pogoda i zdjęcie są pobierane po wyrenderowaniu karty, więc nie blokują jej otwarcia. */
+    Promise.all([fetchAirportWeather(airport), fetchAirportPhoto(airport)])
+        .then(([weather, photo]) => {
+            const currentCard = document.getElementById("card");
+            if(!currentCard || !currentCard.classList.contains("show")) return;
+
+            if(photo){
+                const img = document.getElementById("airportPhoto");
+                const loading = document.getElementById("airportPhotoLoading");
+                if(img){
+                    img.onload = () => { img.style.opacity = "1"; loading?.remove(); };
+                    img.onerror = () => { if(loading) loading.textContent = t("loading_photo"); };
+                    img.src = photo.url;
+                }
+            }else{
+                const loading = document.getElementById("airportPhotoLoading");
+                if(loading) loading.textContent = t("loading_photo");
+            }
+
+            const weatherEl = document.getElementById("airportWeather");
+            if(weatherEl && weather){
+                const unit = weather.temperature_2m !== undefined ? "°C" : "";
+                const temp = Number(weather.temperature_2m);
+                const feels = Number(weather.apparent_temperature);
+                const wind = Number(weather.wind_speed_10m);
+                const dir = Number(weather.wind_direction_10m);
+                const hum = Number(weather.relative_humidity_2m);
+                weatherEl.querySelector(".airport-weather-icon").textContent = weatherIcon(weather.weather_code);
+                weatherEl.querySelector(".airport-weather-temp").textContent = Number.isFinite(temp) ? `${Math.round(temp)}${unit}` : "—";
+                weatherEl.querySelector(".airport-weather-desc").textContent = weatherDescription(weather.weather_code);
+                const cells = weatherEl.querySelectorAll(".airport-weather-grid div");
+                if(cells[0]) cells[0].innerHTML = `${t("wind")}<b>${Number.isFinite(wind) ? Math.round(wind) + " km/h • " + Math.round(dir) + "°" : "—"}</b>`;
+                if(cells[1]) cells[1].innerHTML = `${t("humidity")}<b>${Number.isFinite(hum) ? Math.round(hum) + "%" : "—"}</b>`;
+                if(cells[2]) cells[2].innerHTML = `${t("feels_like")}<b>${Number.isFinite(feels) ? Math.round(feels) + "°C" : "—"}</b>`;
+            }
+        })
+        .catch(() => {});
 
     document
         .getElementById(
@@ -5037,7 +5237,7 @@ function parseJetPhotosPage(text, reg){
 
     const raw = String(text || "");
 
-    const imageMatches = raw.match(/https?:\/\/cdn\.jetphotos\.com\/[^\s)\]"']+\.(?:jpg|jpeg|png)(?:\?[^\s)\]"']*)?/gi) || [];
+    const imageMatches = raw.match(/https?:\/\/cdn\.jetphotos\.com\/[^^\s)\]"']+\.(?:jpg|jpeg|png)(?:\?[^\s)\]"']*)?/gi) || [];
     const photoUrl = imageMatches.length ? imageMatches[0] : null;
 
     const photoPageMatch = raw.match(/https?:\/\/www\.jetphotos\.com\/photo\/\d+/i);
@@ -5049,6 +5249,7 @@ function parseJetPhotosPage(text, reg){
         /#{2,6}\s*Photographer\s*\n+\s*(?:by\s+)?([^\n|]+)/i,
         /Photographer\s*\n+\s*(?:by\s+)?([^\n|]+)/i
     ];
+
     for(const pattern of photographerPatterns){
         const m = raw.match(pattern);
         if(m && m[1]){
@@ -5066,6 +5267,7 @@ function parseJetPhotosPage(text, reg){
         /Built\s*\n+\s*((?:19|20)\d{2})/i,
         /Delivery date\s*:?\s*((?:19|20)\d{2})/i
     ];
+
     for(const pattern of builtPatterns){
         const m = raw.match(pattern);
         if(m){ builtYear = Number(m[1]); break; }
@@ -5078,6 +5280,7 @@ function parseJetPhotosPage(text, reg){
         /Aircraft:\s*#{1,6}\s*([^\n|]+)/i,
         /alt="[^"\n]*?\s-\s([^"\n]+?)\s-\s[^"\n]+"/i
     ];
+
     for(const pattern of modelPatterns){
         const m = raw.match(pattern);
         if(m && m[1]){
@@ -5098,6 +5301,29 @@ function parseJetPhotosPage(text, reg){
     return { photoUrl, photoPage, photographer, builtYear, fullModel };
 }
 
+function testAircraftImage(url, timeout = 4500){
+    return new Promise(resolve => {
+        if(!url) return resolve(false);
+
+        const img = new Image();
+        let done = false;
+
+        const finish = ok => {
+            if(done) return;
+            done = true;
+            clearTimeout(timer);
+            img.onload = null;
+            img.onerror = null;
+            resolve(ok);
+        };
+
+        const timer = setTimeout(() => finish(false), timeout);
+        img.onload = () => finish(true);
+        img.onerror = () => finish(false);
+        img.src = url;
+    });
+}
+
 async function fetchJetPhotosAircraft(reg){
 
     if(!reg) return null;
@@ -5107,8 +5333,6 @@ async function fetchJetPhotosAircraft(reg){
             "https://www.jetphotos.com/registration/" +
             encodeURIComponent(reg);
 
-        /* Jina Reader pozwala pobrać stronę JetPhotos bez ujawniania
-           scrapera po stronie użytkownika. Zwracamy tylko dane potrzebne karcie. */
         const response = await fetch(
             "https://r.jina.ai/http://www.jetphotos.com/registration/" +
             encodeURIComponent(reg),
@@ -5133,6 +5357,48 @@ async function fetchJetPhotosAircraft(reg){
     }
 }
 
+async function fetchAirlinersPhoto(reg){
+
+    if(!reg) return null;
+
+    try{
+        const target =
+            "https://www.airliners.net/search?registrationExact=" +
+            encodeURIComponent(reg);
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4500);
+
+        const response = await fetch(
+            "https://r.jina.ai/http://www.airliners.net/search?registrationExact=" +
+            encodeURIComponent(reg),
+            { signal:controller.signal, cache:"no-store" }
+        );
+
+        clearTimeout(timer);
+        if(!response.ok) return null;
+
+        const html = await response.text();
+        const matches = html.match(/https?:\/\/[^\s)\]"']+\.(?:jpg|jpeg|png)(?:\?[^\s)\]"']*)?/gi) || [];
+
+        for(const url of matches){
+            if(await testAircraftImage(url, 2500)){
+                return {
+                    url,
+                    title:"Airliners.net • " + reg,
+                    source:"Airliners.net",
+                    photoPage:target
+                };
+            }
+        }
+
+    }catch(e){
+        console.warn("Airliners.net photo error:", e);
+    }
+
+    return null;
+}
+
 async function fetchAircraftPhoto(reg, hex){
 
     const key = normalizeAircraftReg(reg) || String(hex || "").toUpperCase();
@@ -5140,120 +5406,200 @@ async function fetchAircraftPhoto(reg, hex){
     if(key && aircraftInfoCache.has(key))
         return aircraftInfoCache.get(key);
 
-    /* 1. Najpierw PlaneSpotters — dokładnie jak chciałeś.
-       Jeśli mają zdjęcie konkretnej rejestracji, pokazujemy je od razu. */
+    const candidates = [];
+
+    /* 1. PlaneSpotters po rejestracji. */
     if(reg){
         try{
             const r = await fetch(
                 "https://api.planespotters.net/pub/photos/reg/" +
-                encodeURIComponent(reg)
+                encodeURIComponent(reg),
+                { cache:"no-store" }
             );
             const data = await r.json();
-            if(data.photos && data.photos.length){
-                const result = {
-                    url: data.photos[0].thumbnail_large.src,
-                    title: "PlaneSpotters • " + reg,
-                    source: "PlaneSpotters"
-                };
-                aircraftInfoCache.set(key, result);
-                return result;
+
+            if(Array.isArray(data.photos)){
+                for(const photo of data.photos.slice(0, 5)){
+                    const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src || photo?.link;
+                    if(url) candidates.push({
+                        url,
+                        title:"PlaneSpotters • " + reg,
+                        source:"PlaneSpotters"
+                    });
+                }
             }
         }catch(e){
-            console.warn("PlaneSpotters photo error:", e);
+            console.warn("PlaneSpotters registration photo error:", e);
         }
     }
 
-    /* 2. Jeśli PlaneSpotters nie ma zdjęcia po rejestracji, sprawdź HEX. */
+    /* 2. PlaneSpotters po HEX. */
     if(hex){
         try{
             const r = await fetch(
                 "https://api.planespotters.net/pub/photos/hex/" +
-                encodeURIComponent(hex)
+                encodeURIComponent(hex),
+                { cache:"no-store" }
             );
             const data = await r.json();
-            if(data.photos && data.photos.length){
-                const result = {
-                    url: data.photos[0].thumbnail_large.src,
-                    title: "PlaneSpotters • ICAO " + hex,
-                    source: "PlaneSpotters"
-                };
-                aircraftInfoCache.set(key, result);
-                return result;
+
+            if(Array.isArray(data.photos)){
+                for(const photo of data.photos.slice(0, 5)){
+                    const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src || photo?.link;
+                    if(url) candidates.push({
+                        url,
+                        title:"PlaneSpotters • ICAO " + hex,
+                        source:"PlaneSpotters"
+                    });
+                }
             }
         }catch(e){
-            console.warn("PlaneSpotters photo error:", e);
+            console.warn("PlaneSpotters HEX photo error:", e);
         }
     }
 
-    /* 3. Dopiero gdy PlaneSpotters nie ma zdjęcia — JetPhotos.
-       JetPhotos ma wyszukiwanie po rejestracji i ogromną bazę zdjęć. */
-    if(reg){
-        try{
-            const jet = await Promise.race([
-                fetchJetPhotosAircraft(reg),
-                new Promise(resolve => setTimeout(() => resolve(null), 2200))
-            ]);
+    /* Sprawdzamy zdjęcia PlaneSpotters zamiast zakładać, że pierwszy URL działa. */
+    for(const candidate of candidates){
+        if(await testAircraftImage(candidate.url, 3000)){
+            aircraftInfoCache.set(key, candidate);
+            return candidate;
+        }
+    }
 
-            if(jet && jet.photoUrl){
+    /* 3. Jeśli PlaneSpotters nie ma działającego zdjęcia — JetPhotos. */
+    if(reg){
+        const jet = await fetchJetPhotosAircraft(reg);
+
+        if(jet){
+            if(jet.photoUrl && await testAircraftImage(jet.photoUrl, 3500)){
                 const result = {
                     ...jet,
-                    url: jet.photoUrl,
-                    title:
-                        "JetPhotos" +
-                        (jet.photographer ? " • " + jet.photographer : "")
+                    url:jet.photoUrl,
+                    title:"JetPhotos" + (jet.photographer ? " • " + jet.photographer : "")
                 };
                 aircraftInfoCache.set(key, result);
                 return result;
             }
 
-            /* Dane modelu/roku z JetPhotos zachowujemy jako metadane, nawet
-               jeśli konkretnego zdjęcia nie udało się pobrać. */
-            const jetMeta = jet ? {
-                fullModel: jet.fullModel || null,
-                builtYear: jet.builtYear || null,
-                photographer: jet.photographer || null,
-                photoPage: jet.photoPage || null
-            } : {};
-
-            /* 4. Dodatkowy fallback fotograficzny: Airliners.net. */
-            try{
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 2000);
-                const r = await fetch(
-                    "https://www.airliners.net/search?registrationExact=" + encodeURIComponent(reg),
-                    { signal:controller.signal }
-                );
-                clearTimeout(timer);
-                const html = await r.text();
-                const imageMatch = html.match(/https?:\/\/[^\"']+\.(?:jpg|jpeg|png)(?:\?[^\"']*)?/i);
-                if(imageMatch){
-                    const result = {
-                        ...jetMeta,
-                        url:imageMatch[0],
-                        title:"Airliners.net • " + reg,
-                        source:"Airliners.net",
-                        photoPage:"https://www.airliners.net/search?registrationExact=" + encodeURIComponent(reg)
-                    };
-                    aircraftInfoCache.set(key, result);
-                    return result;
-                }
-            }catch(e){
-                console.warn("Airliners.net photo error:", e);
+            /* 4. Ostatni prawdziwy fallback fotograficzny — Airliners.net. */
+            const airliners = await fetchAirlinersPhoto(reg);
+            if(airliners){
+                const result = {
+                    ...jet,
+                    ...airliners,
+                    source:"Airliners.net"
+                };
+                aircraftInfoCache.set(key, result);
+                return result;
             }
-        }catch(e){
-            console.warn("JetPhotos error:", e);
+        }else{
+            const airliners = await fetchAirlinersPhoto(reg);
+            if(airliners){
+                aircraftInfoCache.set(key, airliners);
+                return airliners;
+            }
         }
     }
 
-    /* 5. Ostateczny fallback — tylko gdy żaden serwis nie ma zdjęcia. */
+    /* Brak zdjęcia — NIE pokazujemy losowego samolotu jako zdjęcia konkretnej maszyny. */
     const fallback = {
-        url:"https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900",
-        title:"Zdjęcie poglądowe",
-        source:"fallback"
+        url:null,
+        title:t("no_photo"),
+        source:"fallback",
+        fallback:true
     };
+
     aircraftInfoCache.set(key, fallback);
     return fallback;
 }
+
+
+/* =========================================================
+   POGODA + ZDJĘCIE LOTNISKA
+========================================================= */
+
+function weatherDescription(code){
+    const c = Number(code);
+    if(c === 0) return t("clear");
+    if([1,2,3].includes(c)) return t("cloudy");
+    if([45,48].includes(c)) return t("fog");
+    if([51,53,55,56,57].includes(c)) return t("drizzle");
+    if([61,63,65,66,67].includes(c)) return t("rain");
+    if([71,73,75,77].includes(c)) return t("snow");
+    if([80,81,82].includes(c)) return t("rain_showers");
+    if([85,86].includes(c)) return t("snow_showers");
+    if([95,96,99].includes(c)) return t("thunderstorm");
+    return t("no_weather_description");
+}
+
+function weatherIcon(code){
+    const c = Number(code);
+    if([95,96,99].includes(c)) return "⛈️";
+    if([61,63,65,80,81,82].includes(c)) return "🌧️";
+    if([71,73,75,77,85,86].includes(c)) return "🌨️";
+    if([45,48].includes(c)) return "🌫️";
+    if([1,2,3].includes(c)) return "⛅";
+    return "☀️";
+}
+
+async function fetchAirportWeather(airport){
+    try{
+        const url =
+            "https://api.open-meteo.com/v1/forecast?latitude=" +
+            encodeURIComponent(airport.lat) +
+            "&longitude=" +
+            encodeURIComponent(airport.lon) +
+            "&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m&timezone=auto";
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4500);
+        const r = await fetch(url, {cache:"no-store", signal:controller.signal});
+        clearTimeout(timer);
+        if(!r.ok) throw new Error("weather HTTP " + r.status);
+        const data = await r.json();
+        return data.current || null;
+    }catch(e){
+        console.warn("Airport weather error:", e);
+        return null;
+    }
+}
+
+function fetchAirportPhoto(airport){
+    const airportPhotos = {
+        EPKT: "https://cdn.galleries.smcloud.net/t/galleries/gf-csNf-Eizo-spNZ_lotnisko-w-pyrzowicach-jednym-z-najgorszych-w-polsce-tak-twierdza-sami-pasazerowie-994x828.jpg",
+        EPKK: "https://d-pa.ppstatic.pl/frames/pa-def/d3/64/il20260424_963627903_original.jpg",
+        EPKM: "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Airfield_EPKM_in_Katowice-Muchowiec%2C_2016.10.30_%2801%29.jpg/250px-Airfield_EPKM_in_Katowice-Muchowiec%2C_2016.10.30_%2801%29.jpg?utm_source=pl.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPBA: "https://tse4.mm.bing.net/th/id/OIP.IZWPOxWuK4f0fRnTeUTEawHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+        EPGL: "https://gliwice.eu/sites/default/files/news/gallery/lotnisko_M.Foltyn_0.jpg",
+        EPNT: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Lotnisko_Nowy_Targ_pas_12-30.jpg/960px-Lotnisko_Nowy_Targ_pas_12-30.jpg?utm_source=pl.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
+        EPKP: "https://tse2.mm.bing.net/th/id/OIP.v3xMp38PEAa3utyQ3wnotwHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+        EPRZ: "https://dron.rzeszow.pl/wp-content/gallery/lotnisko-rzeszow-jasionka/P1220729-2.jpg",
+        EPKR: "https://cdn.jetphotos.com/full/5/482883_1757872597.jpg",
+        EPML: "https://dlapilota.pl/files/upld/EPML_2020_m.bobro.jpg",
+        EPLB: "https://th.bing.com/th/id/R.174d97c9d1e622160b59fd2841875077?rik=7NYdWqvop1mN5Q&pid=ImgRaw&r=0",
+        EPDE: "https://cdn.jetphotos.com/full/2/16456_1276981655.jpg",
+        EPCZ: "https://zycieczestochowy.pl/wp-content/uploads/2025/08/DSC_01431-1024x683-1_767x470_acf_cropped.jpg",
+        EPRA: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Terminal_lotniska_Warszawa-Radom.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+        EPWA: "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Lotnisko_Chopina_w_Warszawie_2018b.jpg/1920px-Lotnisko_Chopina_w_Warszawie_2018b.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        EPBC: "https://www.allflightmods.com/wp-content/uploads/2020/12/Warsaw-Babice-GA-Airport-EPBC-v2.0-1.jpg",
+        EPLL: "https://cdn.jetphotos.com/full/5/76362_1428193975.jpg",
+        EPOP: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Opole-Polska_Nowa_Wie%C5%9B_Airfield_2019.04.17_(10).jpg/960px-Opole-Polska_Nowa_Wie%C5%9B_Airfield_2019.04.17_(10).jpg?utm_source=pl.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPWR: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Terminal_T2_we_Wroc%C5%82awiu.jpg/250px-Terminal_T2_we_Wroc%C5%82awiu.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPGD: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/GDN_T2_5.jpg/250px-GDN_T2_5.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPBY: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Airport_-_Bydgoszcz_-_panoramio_%2834%29.jpg/250px-Airport_-_Bydgoszcz_-_panoramio_%2834%29.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPMO: "https://api.flextogo.com/files/f2573a01-b1a0-47d7-8779-95dce70d214e",
+        EPTO: "https://th.bing.com/th/id/R.26e9230b3a16f709a61913ced209a4a4?rik=RU%2fQezE6M2xUhA&pid=ImgRaw&r=0",
+        EPSC: "https://th.bing.com/th/id/R.63f74ad98246bd4e4ef31d82bc6b143b?rik=KW2VEnEg1Ra6ew&pid=ImgRaw&r=0",
+        EPLS: "https://radiopoznan.fm/uploads/assets/hglt5fls7m89pq8_lotnisko-leszno.jpg",
+        EPPO: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Pozna%C5%84-%C5%81awica_%28widok_na_terminal%29.JPG/250px-Pozna%C5%84-%C5%81awica_%28widok_na_terminal%29.JPG?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+        EPJG: "https://tse3.mm.bing.net/th/id/OIP.lzQkLK1QCgtzbWyBIkb1GAHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+        EPKA: "https://cdn.jetphotos.com/full/5/1187140_1686243906.jpg",
+        EPEL: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Elbl%C4%85g_lotnisko_2.jpg/250px-Elbl%C4%85g_lotnisko_2.jpg?utm_source=pl.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        EPSK: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Slupsk-krepa-airfield.jpg/250px-Slupsk-krepa-airfield.jpg?utm_source=pl.wikipedia.org&utm_campaign=parser&utm_content=thumbnail"
+    };
+    const url = airportPhotos[String(airport?.icao || '').toUpperCase()];
+    return url ? Promise.resolve({url, page:url, title:`${airport.icao} - ${airport.city}`}) : Promise.resolve(null);
+}
+
 
 /* =========================================================
    KOMPAS
@@ -5724,24 +6070,10 @@ async function updateFlightCard(f){
 
             <div class="route-box">
 
-                🏢
                 ${escapeHtml(
                     f.operator ||
                     airline.name
                 )}
-
-                <br>
-
-                <span
-                    style="
-                        font-size:10px;
-                        color:#8ea7c3;
-                    "
-                >
-                    ${escapeHtml(
-                        airline.code
-                    )}
-                </span>
 
             </div>
 
@@ -5859,7 +6191,7 @@ async function updateFlightCard(f){
             <div class="aircraft-identity" id="aircraftIdentity">
 
                 <div>
-                    <small>PEŁNA NAZWA MODELU</small>
+                    <small data-i18n="full_model_name">PEŁNA NAZWA MODELU</small>
                     <b id="aircraftFullModel">${escapeHtml(getFullAircraftName(f))}</b>
                 </div>
 
@@ -6323,12 +6655,12 @@ async function updateFlightCard(f){
                     ?
                     events.slice(-4).reverse().map(event => `
                         <div class="nearest-row">
-                            <span>${escapeHtml(event.label)}</span>
+                            <span>${escapeHtml(event.labelKey ? t(event.labelKey) : event.label)}</span>
                             <span class="nearest-dist">${new Date(event.time).toLocaleTimeString("pl-PL")}</span>
                         </div>
                     `).join("")
                     :
-                    `<div class="nearest-row"><span>Brak zapisanych zdarzeń</span><span class="nearest-dist">—</span></div>`
+                    `<div class="nearest-row"><span>${t("no_saved_events")}</span><span class="nearest-dist">—</span></div>`
                 }
 
                 <div class="muted" style="margin:10px 0 0;">
@@ -6555,20 +6887,33 @@ async function updateFlightCard(f){
 
 
     if(img){
-
-        img.onload = () => {
-
-            img.style.opacity =
-                "1";
-
-            skeleton?.remove();
-
-        };
-
-
-        img.src =
-            photo.url;
-
+        if(photo.url){
+            img.onload = () => {
+                img.style.opacity = "1";
+                if(photo.fallback && skeleton){
+                    skeleton.textContent = t("no_photo");
+                    skeleton.style.background = "transparent";
+                    skeleton.style.color = "#000";
+                    skeleton.style.display = "flex";
+                    skeleton.style.alignItems = "center";
+                    skeleton.style.justifyContent = "center";
+                    skeleton.style.fontWeight = "700";
+                    skeleton.style.textShadow = "none";
+                }else{
+                    skeleton?.remove();
+                }
+            };
+            img.onerror = () => {
+                img.removeAttribute("src");
+                img.style.opacity = "0";
+                if(skeleton){ skeleton.textContent = t("no_photo"); skeleton.style.color = "#000"; }
+            };
+            img.src = photo.url;
+        }else{
+            img.removeAttribute("src");
+            img.style.opacity = "0";
+            if(skeleton){ skeleton.textContent = t("no_photo"); skeleton.style.color = "#000"; }
+        }
     }
 
 
@@ -7411,11 +7756,25 @@ function render(){
 
         }else{
 
-            entry.target = [
-                f.lat,
-                f.lon
-            ];
+            /* Nie pozwalamy świeżemu/niestabilnemu odczytowi cofnąć samolotu.
+               Jeżeli ADS-B zwróci punkt za aktualną pozycją wzdłuż lotu,
+               zostawiamy bieżącą pozycję i kontynuujemy predykcję. */
+            const currentPos = entry.cur || [f.lat, f.lon];
+            const headingForGuard = getFlightDirection(f);
+            let acceptTarget = true;
 
+            if(headingForGuard !== null && !f.ground){
+                const rad = headingForGuard * Math.PI / 180;
+                const dLatM = (f.lat - currentPos[0]) * 111320;
+                const cosLat = Math.cos(currentPos[0] * Math.PI / 180) || 0.01;
+                const dLonM = (f.lon - currentPos[1]) * 111320 * cosLat;
+                const forwardM = dLatM * Math.cos(rad) + dLonM * Math.sin(rad);
+                if(forwardM < -120) acceptTarget = false;
+            }
+
+            entry.target = acceptTarget
+                ? [f.lat, f.lon]
+                : currentPos.slice();
 
             entry.data =
                 f;
@@ -7710,12 +8069,23 @@ function render(){
 ========================================================= */
 
 let lastAnimTs = performance.now();
+let lastHeavyFrameTs = 0;
+let lastRouteFrameTs = 0;
 
 function animateMarkers(){
 
     const now = performance.now();
-    const dt = Math.min(0.1, (now - lastAnimTs) / 1000); /* sekundy, max 100ms */
+    const rawDt = Math.min(0.1, (now - lastAnimTs) / 1000);
     lastAnimTs = now;
+
+    /* Animacja wizualna nadal korzysta z requestAnimationFrame, ale ciężkie
+       operacje Leaflet wykonujemy maks. ~30 razy/s zamiast 60+ razy/s. */
+    if(now - lastHeavyFrameTs < (1000 / MOTION_FPS)){
+        requestAnimationFrame(animateMarkers);
+        return;
+    }
+    lastHeavyFrameTs = now;
+    const dt = rawDt;
 
     const smooth =
         document
@@ -7735,15 +8105,27 @@ function animateMarkers(){
             const f = entry.data;
             if(!f) continue;
 
-            /* 1) Korekta w stronę ostatniej pozycji ADS-B (target) */
+            /* 1) Korekta do ostatniej pozycji ADS-B, ale NIGDY wstecz. */
             const dLat = entry.target[0] - entry.cur[0];
             const dLon = entry.target[1] - entry.cur[1];
             const distErr = Math.sqrt(dLat * dLat + dLon * dLon);
+            const headingGuard = getFlightDirection(f);
+            let forwardErrM = 0;
 
-            /* Mocniejsza korekta gdy daleko od targetu, delikatna gdy blisko */
-            const pull = distErr > 0.05 ? 0.12 : (distErr > 0.01 ? 0.08 : 0.04);
-            entry.cur[0] += dLat * pull;
-            entry.cur[1] += dLon * pull;
+            if(headingGuard !== null && !f.ground){
+                const radGuard = headingGuard * Math.PI / 180;
+                const cosLatGuard = Math.cos(entry.cur[0] * Math.PI / 180) || 0.01;
+                const dLatMGuard = dLat * 111320;
+                const dLonMGuard = dLon * 111320 * cosLatGuard;
+                forwardErrM = dLatMGuard * Math.cos(radGuard) + dLonMGuard * Math.sin(radGuard);
+            }
+
+            /* Jeśli target jest za samolotem, ignorujemy go i lecimy dalej. */
+            if(forwardErrM >= -120){
+                const pull = distErr > 0.05 ? 0.12 : (distErr > 0.01 ? 0.08 : 0.04);
+                entry.cur[0] += dLat * pull;
+                entry.cur[1] += dLon * pull;
+            }
 
             /* 2) Predykcja ruchu: prędkość (m/s) + heading → ciągły ruch między refreshami */
             if(
@@ -7777,8 +8159,10 @@ function animateMarkers(){
             */
             if(
                 !isMapZooming &&
+                now - lastRouteFrameTs >= ROUTE_UPDATE_MS &&
                 document.getElementById("showRoute")?.checked
             ){
+                lastRouteFrameTs = now;
                 const line = flightPathLines.get(f.icao);
                 const history = flightHistories.get(f.icao);
 
@@ -8615,9 +8999,6 @@ if(allFlightsCb){
     syncAllFlightsFilters();
 }
 
-const borderCb = document.getElementById("showPolandBorder");
-if(borderCb) borderCb.onchange = applyPolandBorder;
-
 
 /* =========================================================
    NAZWY MIAST NA MAPIE
@@ -8637,6 +9018,8 @@ function applyCityLabelsSetting(){
         "hide-city-labels",
         !show
     );
+
+    applySatelliteLabels();
 
 }
 
@@ -8735,6 +9118,9 @@ document
                     satelliteLayer
                 );
 
+            if(map.hasLayer(satelliteLabelsLayer))
+                map.removeLayer(satelliteLabelsLayer);
+
 
             if(
                 !map.hasLayer(
@@ -8788,6 +9174,8 @@ document
                 satelliteLayer.addTo(
                     map
                 );
+
+            applySatelliteLabels();
 
 
             this.classList.add(
@@ -9164,8 +9552,6 @@ renderAirports();
 
 applyCityLabelsSetting();
 
-applyPolandBorder();
-
 /* Język – start + zmiana */
 applyLanguage();
 
@@ -9176,6 +9562,9 @@ if(langSelectEl){
         currentLang = this.value;
         localStorage.setItem("pfr_lang", currentLang);
         applyLanguage();
+        if(currentAirportCardAirport){
+            showAirportCard(currentAirportCardAirport);
+        }
         /* Odśwież listę i kartę jeśli otwarta */
         renderFlightList();
         if(selected){
@@ -9215,7 +9604,7 @@ load();
 
 setInterval(
     load,
-    3000
+    5000
 );
 
 </script>
