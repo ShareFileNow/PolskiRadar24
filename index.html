@@ -1765,24 +1765,7 @@ map.on("zoomstart", () => {
 
 map.on("zoomend", () => {
     isMapZooming = false;
-
-    for(const [icao, entry] of markers){
-        const line = flightPathLines.get(icao);
-        const history = flightHistories.get(icao);
-
-        if(
-            line &&
-            history &&
-            history.length >= 2 &&
-            entry &&
-            entry.cur
-        ){
-            line.setLatLngs([
-                ...history,
-                entry.cur.slice()
-            ]);
-        }
-    }
+    syncFlightPathEndpoints();
 });
 
 const radarLayer = L.tileLayer(
@@ -2536,7 +2519,11 @@ function updateAllFlightHistories(){
             flightHistories.set(
                 f.icao,
                 [
-                    [f.lat,f.lon]
+                    [
+                        f.lat,
+                        f.lon,
+                        Number.isFinite(f.alt) ? f.alt : null
+                    ]
                 ]
             );
 
@@ -2574,7 +2561,8 @@ function updateAllFlightHistories(){
 
             history.push([
                 f.lat,
-                f.lon
+                f.lon,
+                Number.isFinite(f.alt) ? f.alt : null
             ]);
 
         }
@@ -2666,160 +2654,191 @@ function updateAllFlightHistories(){
 function renderAllFlightPaths(){
 
     const checkbox =
-        document.getElementById(
-            "showRoute"
-        );
-
+        document.getElementById("showRoute");
 
     const enabled =
         checkbox &&
         checkbox.checked;
 
-
     /*
-        Jeśli trasy są wyłączone,
-        ukrywamy wszystkie linie.
+        Tor każdego samolotu jest znany cały czas,
+        ale jest niewidoczny, dopóki samolot nie zostanie wybrany.
+        Po kliknięciu pokazujemy jego całą historię.
     */
-
     if(!enabled){
-
-        for(
-            const line
-            of flightPathLines.values()
-        ){
-
-            if(
-                map.hasLayer(
-                    line
-                )
-            ){
-
-                map.removeLayer(
-                    line
-                );
-
-            }
-
+        for(const layer of flightPathLines.values()){
+            if(map.hasLayer(layer))
+                map.removeLayer(layer);
         }
-
         return;
-
     }
 
+    for(const [icao, history] of flightHistories){
 
-    /*
-        Rysujemy trasę każdego samolotu.
-    */
-
-    for(
-        const [
-            icao,
-            history
-        ]
-        of flightHistories
-    ){
-
-        /*
-            Minimum dwa punkty są potrzebne
-            do narysowania odcinka.
-        */
-
-        if(
-            !history ||
-            history.length < 2
-        )
+        if(!history || history.length < 2)
             continue;
 
+        const entry = markers.get(icao);
+        const isSelected =
+            selected &&
+            selected.icao === icao;
 
-        let line =
-            flightPathLines.get(
-                icao
+        /*
+            Końcówka toru jest zawsze dokładnie na płynnej pozycji markera.
+        */
+        let displayHistory = history.slice();
+
+        if(entry && Array.isArray(entry.cur)){
+            displayHistory = history.slice(0, -1);
+            const currentAlt =
+                entry.data && Number.isFinite(entry.data.alt)
+                ? entry.data.alt
+                : (history[history.length - 1]?.[2] ?? null);
+            displayHistory.push([
+                entry.cur[0],
+                entry.cur[1],
+                currentAlt
+            ]);
+        }
+
+        let layer = flightPathLines.get(icao);
+
+        if(!layer){
+            layer = L.layerGroup();
+            flightPathLines.set(icao, layer);
+        }
+
+        /*
+            Usuwamy tylko stare odcinki tej jednej trasy i budujemy je ponownie.
+            Dzięki temu każdy odcinek może mieć kolor wynikający z wysokości.
+        */
+        layer.clearLayers();
+
+        for(let i = 1; i < displayHistory.length; i++){
+            const a = displayHistory[i - 1];
+            const b = displayHistory[i];
+
+            /*
+                KAŻDY ODCINEK ma własny kolor wynikający z wysokości
+                zapisanej w momencie jego utworzenia.
+                Dzięki temu stary kolor NIE zmienia się, gdy samolot
+                później wznosi się albo zniża.
+            */
+            const segmentAlt =
+                Number.isFinite(a[2])
+                ? a[2]
+                : (Number.isFinite(b[2]) ? b[2] : null);
+
+            const segmentGround =
+                entry?.data?.ground === true &&
+                i === displayHistory.length - 1;
+
+            const segmentColor =
+                getAltitudeColor(
+                    segmentAlt,
+                    segmentGround
+                );
+
+            const segment = L.polyline(
+                [
+                    [a[0], a[1]],
+                    [b[0], b[1]]
+                ],
+                {
+                    color: segmentColor,
+                    weight: isSelected ? 4 : 2,
+                    opacity: isSelected ? .95 : 0,
+                    interactive: false
+                }
             );
 
+            layer.addLayer(segment);
+        }
+
+        if(!map.hasLayer(layer))
+            layer.addTo(map);
+    }
+}
+
+
+/* Synchronizuje końcówkę niebieskiego toru z aktualną pozycją markera. */
+
+function syncFlightPathEndpoints(){
+
+    const checkbox = document.getElementById("showRoute");
+    if(!checkbox || !checkbox.checked)
+        return;
+
+    for(const [icao, layer] of flightPathLines){
+        const entry = markers.get(icao);
+        const history = flightHistories.get(icao);
+
+        if(!entry || !history || history.length < 2)
+            continue;
+
+        if(!Array.isArray(entry.cur))
+            continue;
+
+        /*
+            Aktualizujemy tylko końcówkę trasy, zachowując jej kolory wg wysokości.
+        */
+        let displayHistory = history.slice(0, -1);
+        const currentAlt =
+            entry.data && Number.isFinite(entry.data.alt)
+            ? entry.data.alt
+            : (history[history.length - 1]?.[2] ?? null);
+
+        displayHistory.push([
+            entry.cur[0],
+            entry.cur[1],
+            currentAlt
+        ]);
+
+        layer.clearLayers();
 
         const isSelected =
             selected &&
             selected.icao === icao;
 
+        for(let i = 1; i < displayHistory.length; i++){
+            const a = displayHistory[i - 1];
+            const b = displayHistory[i];
 
-        if(!line){
+            /* Zachowujemy kolor każdego starego odcinka wg jego wysokości. */
+            const segmentAlt =
+                Number.isFinite(a[2])
+                ? a[2]
+                : (Number.isFinite(b[2]) ? b[2] : null);
 
-            line =
+            const segmentGround =
+                entry.data?.ground === true &&
+                i === displayHistory.length - 1;
+
+            const segmentColor =
+                getAltitudeColor(
+                    segmentAlt,
+                    segmentGround
+                );
+
+            layer.addLayer(
                 L.polyline(
-                    history,
+                    [
+                        [a[0], a[1]],
+                        [b[0], b[1]]
+                    ],
                     {
-                        color:"#2fb8ff",
-
-                        /*
-                            Wybrany lot jest mocniejszy,
-                            pozostałe są delikatniejsze.
-                        */
-
-                        weight:
-                            isSelected
-                            ? 4
-                            : 2,
-
-                        opacity:
-                            isSelected
-                            ? .95
-                            : .55,
-
-                        dashArray:"10 8",
-
-                        interactive:false
+                        color: segmentColor,
+                        weight: isSelected ? 4 : 2,
+                        opacity: isSelected ? .95 : 0,
+                        interactive: false
                     }
-                );
-
-
-            line.addTo(
-                map
-            );
-
-
-            flightPathLines.set(
-                icao,
-                line
-            );
-
-        }else{
-
-            line.setLatLngs(
-                history
-            );
-
-
-            line.setStyle({
-
-                weight:
-                    isSelected
-                    ? 4
-                    : 2,
-
-                opacity:
-                    isSelected
-                    ? .95
-                    : .55
-
-            });
-
-
-            if(
-                !map.hasLayer(
-                    line
                 )
-            ){
-
-                line.addTo(
-                    map
-                );
-
-            }
-
+            );
         }
 
+        if(!map.hasLayer(layer))
+            layer.addTo(map);
     }
-
 }
 
 
@@ -3870,7 +3889,8 @@ function updateFlightHistory(f){
         const point =
             [
                 f.lat,
-                f.lon
+                f.lon,
+                Number.isFinite(f.alt) ? f.alt : null
             ];
 
 
@@ -3969,6 +3989,7 @@ function clearFlightPath(){
     flightPathLine = null;
 
     syncSelectedHistory();
+    renderAllFlightPaths();
 
 }
 
@@ -4967,7 +4988,8 @@ function showFlight(f){
             [
                 [
                     f.lat,
-                    f.lon
+                    f.lon,
+                    Number.isFinite(f.alt) ? f.alt : null
                 ]
             ]
         );
@@ -7868,14 +7890,16 @@ function render(){
                     .checked
             ){
 
+                const followEntry = markers.get(current.icao);
+                const followPos = followEntry && Array.isArray(followEntry.cur)
+                    ? followEntry.cur
+                    : [current.lat, current.lon];
+
                 map.panTo(
-                    [
-                        current.lat,
-                        current.lon
-                    ],
+                    followPos,
                     {
                         animate:true,
-                        duration:.4
+                        duration:.25
                     }
                 );
 
@@ -7990,19 +8014,19 @@ function animateMarkers(){
                 document.getElementById("showRoute")?.checked
             ){
                 lastRouteFrameTs = now;
-                const line = flightPathLines.get(f.icao);
-                const history = flightHistories.get(f.icao);
+                syncFlightPathEndpoints();
+            }
 
-                if(
-                    line &&
-                    history &&
-                    history.length >= 2
-                ){
-                    line.setLatLngs([
-                        ...history,
-                        entry.cur.slice()
-                    ]);
-                }
+            /* Aktywne śledzenie podąża za faktyczną, płynną pozycją markera,
+               a nie za starą pozycją z ostatniego pakietu ADS-B. */
+            if(
+                selected &&
+                selected.icao === f.icao &&
+                followMode &&
+                document.getElementById("autoFollow")?.checked &&
+                !isMapZooming
+            ){
+                map.panTo(entry.cur, {animate:false});
             }
 
         }
@@ -9431,7 +9455,7 @@ load();
 
 setInterval(
     load,
-    3000
+    5000
 );
 
 </script>
