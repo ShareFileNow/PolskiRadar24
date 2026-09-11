@@ -1869,7 +1869,7 @@ const translations = {
         path_source: "Niebieski tor lotu",
         last_contact: "Ostatni kontakt",
         lbl_operator: "Operator",
-        no_photo: "Brak zdjęcia",
+        no_photo: "Zdjęcie poglądowe",
         lbl_manufacturer: "Producent",
         lbl_model: "Model",
         lbl_altitude: "Wysokość",
@@ -1996,7 +1996,7 @@ const translations = {
         path_source: "Blue flight path",
         last_contact: "Last contact",
         lbl_operator: "Operator",
-        no_photo: "No photo",
+        no_photo: "Preview image",
         lbl_manufacturer: "Manufacturer",
         lbl_model: "Model",
         lbl_altitude: "Altitude",
@@ -5282,82 +5282,69 @@ async function fetchAircraftPhoto(reg, hex){
     if(key && aircraftInfoCache.has(key))
         return aircraftInfoCache.get(key);
 
-    const candidates = [];
-
-    /* 1. PlaneSpotters po rejestracji. */
+    /* 1. PlaneSpotters — najpierw dokładnie po rejestracji. */
     if(reg){
         try{
             const r = await fetch(
                 "https://api.planespotters.net/pub/photos/reg/" +
-                encodeURIComponent(reg),
-                { cache:"no-store" }
+                encodeURIComponent(reg)
             );
             const data = await r.json();
 
-            if(Array.isArray(data.photos)){
-                for(const photo of data.photos.slice(0, 5)){
-                    const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src || photo?.link;
-                    if(url) candidates.push({
+            if(data.photos && data.photos.length){
+                const photo = data.photos[0];
+                const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src;
+                if(url){
+                    const result = {
                         url,
                         title:"PlaneSpotters • " + reg,
                         source:"PlaneSpotters"
-                    });
+                    };
+                    aircraftInfoCache.set(key, result);
+                    return result;
                 }
             }
         }catch(e){
-            console.warn("PlaneSpotters registration photo error:", e);
+            console.warn("PlaneSpotters photo error:", e);
         }
     }
 
-    /* 2. PlaneSpotters po HEX. */
+    /* 2. Jeśli nie ma po rejestracji — PlaneSpotters po HEX. */
     if(hex){
         try{
             const r = await fetch(
                 "https://api.planespotters.net/pub/photos/hex/" +
-                encodeURIComponent(hex),
-                { cache:"no-store" }
+                encodeURIComponent(hex)
             );
             const data = await r.json();
 
-            if(Array.isArray(data.photos)){
-                for(const photo of data.photos.slice(0, 5)){
-                    const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src || photo?.link;
-                    if(url) candidates.push({
+            if(data.photos && data.photos.length){
+                const photo = data.photos[0];
+                const url = photo?.thumbnail_large?.src || photo?.thumbnail?.src;
+                if(url){
+                    const result = {
                         url,
                         title:"PlaneSpotters • ICAO " + hex,
                         source:"PlaneSpotters"
-                    });
+                    };
+                    aircraftInfoCache.set(key, result);
+                    return result;
                 }
             }
         }catch(e){
-            console.warn("PlaneSpotters HEX photo error:", e);
+            console.warn("PlaneSpotters photo error:", e);
         }
     }
 
-    /* Sprawdzamy zdjęcia PlaneSpotters i bierzemy pierwsze działające. */
-    for(const candidate of candidates){
-        if(await testAircraftImage(candidate.url, 3000)){
-            aircraftInfoCache.set(key, candidate);
-            return candidate;
-        }
-    }
-
-    /* 3. Airliners.net — dodatkowy prawdziwy fallback. */
-    if(reg){
-        const airliners = await fetchAirlinersPhoto(reg);
-        if(airliners){
-            aircraftInfoCache.set(key, airliners);
-            return airliners;
-        }
-    }
-
-    /* 4. Ostateczny fallback — zdjęcie poglądowe, tak jak w backupie. */
+    /* 3. Ostatecznie dokładnie taki podgląd jak w backupie.
+       Nigdy nie pokazujemy już tekstu „Brak zdjęcia”. */
     const fallback = {
         url:"https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900",
         title:"Zdjęcie poglądowe",
         source:"fallback",
         fallback:true
     };
+
     aircraftInfoCache.set(key, fallback);
     return fallback;
 }
@@ -6719,29 +6706,43 @@ async function updateFlightCard(f){
 
 
     if(img){
-        if(photo.url){
-            img.onload = () => {
-                img.style.opacity = "1";
-                skeleton?.remove();
-            };
-            img.onerror = () => {
-                img.removeAttribute("src");
-                img.style.opacity = "0";
-                if(skeleton){ skeleton.textContent = "Zdjęcie poglądowe"; skeleton.style.background = "transparent"; skeleton.style.color = "#7890aa"; skeleton.style.display = "flex"; skeleton.style.alignItems = "center"; skeleton.style.justifyContent = "center"; }
-            };
-            img.src = photo.url;
-        }else{
-            img.removeAttribute("src");
+        const previewUrl = "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900";
+        let usingPreview = !!photo.fallback;
+
+        img.onload = () => {
+            img.style.opacity = "1";
+            skeleton?.remove();
+        };
+
+        img.onerror = () => {
+            if(!usingPreview){
+                usingPreview = true;
+                img.src = previewUrl;
+                if(caption) caption.innerHTML = `📷 ${escapeHtml(currentLang === "en" ? "Preview image" : "Zdjęcie poglądowe")}`;
+                return;
+            }
             img.style.opacity = "0";
-            if(skeleton){ skeleton.textContent = "Zdjęcie poglądowe"; skeleton.style.background = "transparent"; skeleton.style.color = "#7890aa"; skeleton.style.display = "flex"; skeleton.style.alignItems = "center"; skeleton.style.justifyContent = "center"; }
-        }
+            if(skeleton){
+                skeleton.textContent = currentLang === "en" ? "Preview image" : "Zdjęcie poglądowe";
+                skeleton.style.background = "transparent";
+                skeleton.style.color = "#7890aa";
+                skeleton.style.display = "flex";
+                skeleton.style.alignItems = "center";
+                skeleton.style.justifyContent = "center";
+            }
+        };
+
+        // Jeśli nie ma prawdziwego zdjęcia, pokazujemy podgląd z backupu zamiast "Brak zdjęcia".
+        img.src = photo.url || previewUrl;
     }
 
 
     if(caption){
-        const cleanPhotoTitle = photo.title || "Zdjęcie poglądowe";
+        const cleanPhotoTitle = photo.fallback
+            ? (currentLang === "en" ? "Preview image" : "Zdjęcie poglądowe")
+            : (photo.title || (currentLang === "en" ? "Preview image" : "Zdjęcie poglądowe"));
 
-        caption.innerHTML = photo.photoPage
+        caption.innerHTML = (!photo.fallback && photo.photoPage)
             ? `📷 <a href="${escapeHtml(photo.photoPage)}" target="_blank" rel="noopener noreferrer" style="color:#c7ddf0;text-decoration:none;">${escapeHtml(cleanPhotoTitle)}</a>`
             : `📷 ${escapeHtml(cleanPhotoTitle)}`;
     }
