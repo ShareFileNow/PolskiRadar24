@@ -8160,6 +8160,8 @@ function updateLiveCard(f){
         );
 
 
+    const routeValue = String(f.route || "N/A").trim() || "N/A";
+    const routeValue = String(f.route || "N/A").trim() || "N/A";
     const routeEl = card.querySelector("[data-aircraft-route]");
     if(routeEl)
         routeEl.textContent = routeValue;
