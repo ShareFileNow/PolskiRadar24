@@ -3379,267 +3379,741 @@ function getAirline(callsign){
 
     const airlines = [
 
-        /* Grupa Ryanair */
-        ["RYR","Ryanair"],
-        ["RUK","Ryanair UK"],
-        ["RFR","Ryanair UK"],
-        ["RYS","Ryanair Sun (Buzz)"],
-        ["MAY","Malta Air (Ryanair)"],
-        ["LDE","Lauda Europe (Ryanair)"],
-        ["LDM","Lauda Europe (Ryanair)"],
+       const airlines = [
 
-        /* Polska i region */
-        ["LOT","LOT Polish Airlines"],
-        ["ENT","Enter Air"],
-        ["WZZ","Wizz Air"],
-        ["WUK","Wizz Air UK"],
-        ["WMT","Wizz Air Malta"],
-        ["CLW","Buzz (Ryanair Sun)"],
-        ["SPP","SprintAir"],
-        ["BAW","British Airways"],
+    /* =========================================================
+       RYANAIR GROUP
+       ========================================================= */
 
-        /* Niemcy / Europa Zach. */
-        ["DLH","Lufthansa"],
-        ["GEC","Lufthansa Cargo"],
-        ["EWG","Eurowings"],
-        ["CFG","Condor"],
-        ["BER","Air Berlin"],
-        ["GWI","Germanwings"],
-        ["TUI","TUI fly"],
-        ["BLX","TUI Airlines Belgium"],
-        ["HLX","Hapag-Lloyd"],
-        ["ABR","ASL Airlines"],
-        ["AHO","Air Hamburg"],
+    ["RYR","Ryanair"],
+    ["RUK","Ryanair UK"],
+    ["RFR","Ryanair UK"],
+    ["RYS","Ryanair Sun (Buzz)"],
+    ["CLW","Buzz (Ryanair Sun)"],
+    ["MAY","Malta Air (Ryanair)"],
+    ["LDE","Lauda Europe (Ryanair)"],
+    ["LDM","Lauda Europe (Ryanair)"],
 
-        /* UK / Irlandia */
-        ["EZY","easyJet"],
-        ["EJU","easyJet Europe"],
-        ["EZS","easyJet Switzerland"],
-        ["EXS","Jet2"],
-        ["TOM","TUI Airways"],
-        ["EIN","Aer Lingus"],
-        ["VIR","Virgin Atlantic"],
-        ["BMI","bmi"],
-        ["TCX","Thomas Cook"],
-        ["MON","Monarch"],
+    /* =========================================================
+       WIZZ AIR GROUP
+       ========================================================= */
 
-        /* Holandia / Belgia / Francja */
-        ["KLM","KLM"],
-        ["AFR","Air France"],
-        ["BEL","Brussels Airlines"],
-        ["TVF","Transavia"],
-        ["TRA","Transavia"],
-        ["HVN","Vietnam Airlines"],
-        ["AFL","Aeroflot"],
-        ["SBI","S7 Airlines"],
-        ["UAE","Emirates"],
-        ["QTR","Qatar Airways"],
-        ["ETD","Etihad Airways"],
-        ["ABY","Air Arabia"],
-        ["FDB","flydubai"],
-        ["GFA","Gulf Air"],
-        ["OMA","Oman Air"],
-        ["MEA","Middle East Airlines"],
+    ["WZZ","Wizz Air"],
+    ["WUK","Wizz Air UK"],
+    ["WMT","Wizz Air Malta"],
 
-        /* Turcja / Bliski Wschód */
-        ["THY","Turkish Airlines"],
-        ["PGT","Pegasus Airlines"],
-        ["SXS","SunExpress"],
-        ["AJT","AnadoluJet"],
-        ["TKJ","Turkish Airlines"],
-        ["AJA","AnadoluJet"],
+    /* =========================================================
+       NORWEGIAN GROUP
+       ========================================================= */
 
-        /* Skandynawia / Bałtyk */
-        ["SWR","Swiss"],
-        ["AUA","Austrian Airlines"],
-        ["SAS","SAS Scandinavian Airlines"],
-        ["NAX","Norwegian Air Shuttle"],
-        ["NOZ","Norwegian Air Sweden"],
-        ["IBK","Norwegian Air International"],
-        ["FIN","Finnair"],
-        ["BTI","airBaltic"],
-        ["ICE","Icelandair"],
-        ["FIH","Icelandair"],
-        ["WOW","WOW air"],
+    ["NAX","Norwegian Air Shuttle"],
+    ["NSZ","Norwegian Air Sweden"],
+    ["NOZ","Norwegian Air Sweden"],
+    ["IBK","Norwegian Air International"],
 
-        /* Południe Europy */
-        ["IBE","Iberia"],
-        ["VLG","Vueling"],
-        ["VOE","Volotea"],
-        ["TAP","TAP Air Portugal"],
-        ["ITY","ITA Airways"],
-        ["AZA","Alitalia"],
-        ["AEA","Air Europa"],
-        ["RYR","Ryanair"],
-        ["Vueling","Vueling"],
-        ["CSA","Czech Airlines"],
-        ["ROT","Tarom"],
-        ["WZZ","Wizz Air"],
-        ["TVS","Smartwings"],
-        ["SMX","SmartLynx"],
-        ["BCI","Bluebird Nordic"],
-        ["NJE","NetJets Europe"],
-        ["EJU","easyJet Europe"],
+    /* =========================================================
+       EASYJET GROUP
+       ========================================================= */
 
-        /* Ameryka */
-        ["AAL","American Airlines"],
-        ["DAL","Delta Air Lines"],
-        ["UAL","United Airlines"],
-        ["ACA","Air Canada"],
-        ["SWA","Southwest Airlines"],
-        ["JBU","JetBlue"],
-        ["ASA","Alaska Airlines"],
-        ["FFT","Frontier Airlines"],
-        ["NKS","Spirit Airlines"],
-        ["SCX","Sun Country"],
-        ["VRD","Virgin America"],
-        ["ROU","Air Canada Rouge"],
-        ["WJA","WestJet"],
-        ["JZA","Jazz Air"],
-        ["LAN","LATAM"],
-        ["TAM","LATAM Brasil"],
-        ["AVA","Avianca"],
-        ["CMP","Copa Airlines"],
-        ["GLO","GOL"],
-        ["AZU","Azul"],
-        ["TAM","TAM"],
+    ["EZY","easyJet"],
+    ["EJU","easyJet Europe"],
+    ["EZS","easyJet Switzerland"],
 
-        /* Azja / Pacyfik */
-        ["CPA","Cathay Pacific"],
-        ["SIA","Singapore Airlines"],
-        ["ANA","All Nippon Airways"],
-        ["JAL","Japan Airlines"],
-        ["CCA","Air China"],
-        ["CES","China Eastern"],
-        ["CSN","China Southern"],
-        ["QFA","Qantas"],
-        ["VOZ","Virgin Australia"],
-        ["TGW","Scoot"],
-        ["AIQ","AirAsia"],
-        ["AXM","AirAsia"],
-        ["MAS","Malaysia Airlines"],
-        ["THA","Thai Airways"],
-        ["GIA","Garuda Indonesia"],
-        ["PAL","Philippine Airlines"],
-        ["KAL","Korean Air"],
-        ["AAR","Asiana Airlines"],
-        ["HVN","Vietnam Airlines"],
-        ["VJC","VietJet"],
-        ["IGO","IndiGo"],
-        ["AIC","Air India"],
-        ["JAI","Jet Airways"],
-        ["VTI","Vistara"],
-        ["IGO","IndiGo"],
+    /* =========================================================
+       LOT / POLSKA
+       ========================================================= */
 
-        /* Afryka / Inne */
-        ["ETH","Ethiopian Airlines"],
-        ["SVA","Saudia"],
-        ["ELY","El Al"],
-        ["MSR","EgyptAir"],
-        ["RAM","Royal Air Maroc"],
-        ["KAC","Kuwait Airways"],
-        ["QTR","Qatar Airways"],
-        ["RJA","Royal Jordanian"],
-        ["MEG","MEA"],
-        ["IRN","Iran Air"],
-        ["IRA","Iran Air"],
-        ["PIA","Pakistan International"],
-        ["BGH","Bulgarian Air"],
-        ["WZZ","Wizz Air"],
-        ["LOT","LOT"],
-        ["AEE","Aegean Airlines"],
-        ["OA","Olympic Air"],
-        ["CYP","Cyprus Airways"],
-        ["CTN","Croatia Airlines"],
-        ["ADL","Adria Airways"],
-        ["JP","Adria"],
-        ["OS","Austrian"],
-        ["LX","Swiss"],
-        ["SK","SAS"],
-        ["AY","Finnair"],
-        ["DY","Norwegian"],
-        ["FR","Ryanair"],
-        ["U2","easyJet"],
-        ["BA","British Airways"],
-        ["LH","Lufthansa"],
-        ["AF","Air France"],
-        ["KL","KLM"],
-        ["IB","Iberia"],
-        ["TP","TAP"],
-        ["AZ","ITA"],
-        ["SU","Aeroflot"],
-        ["TK","Turkish"],
-        ["EK","Emirates"],
-        ["QR","Qatar"],
-        ["EY","Etihad"],
-        ["SV","Saudia"],
-        ["MS","EgyptAir"],
-        ["ET","Ethiopian"],
-        ["SA","South African"],
-        ["KQ","Kenya Airways"],
-        ["AT","Royal Air Maroc"],
-        ["DT","TAAG"],
-        ["UU","Air Austral"],
-        ["MD","Air Madagascar"],
-        ["HM","Air Seychelles"],
-        ["MK","Air Mauritius"],
-        ["UL","SriLankan"],
-        ["AI","Air India"],
-        ["9W","Jet Airways"],
-        ["6E","IndiGo"],
-        ["SG","SpiceJet"],
-        ["G8","GoAir"],
-        ["I5","AirAsia India"],
-        ["UK","Vistara"],
-        ["NH","ANA"],
-        ["JL","JAL"],
-        ["KE","Korean Air"],
-        ["OZ","Asiana"],
-        ["CA","Air China"],
-        ["MU","China Eastern"],
-        ["CZ","China Southern"],
-        ["HU","Hainan Airlines"],
-        ["3U","Sichuan Airlines"],
-        ["MF","XiamenAir"],
-        ["FM","Shanghai Airlines"],
-        ["HO","Juneyao"],
-        ["9C","Spring Airlines"],
-        ["AQ","9 Air"],
-        ["GJ","Loong Air"],
-        ["NS","Hebei Airlines"],
-        ["PN","West Air"],
-        ["EU","Chengdu Airlines"],
-        ["G5","China Express"],
-        ["OQ","Chongqing Airlines"],
-        ["KY","Kunming Airlines"],
-        ["8L","Lucky Air"],
-        ["DR","Ruili Airlines"],
-        ["A6","Air Travel"],
-        ["UQ","Urumqi Air"],
-        ["GY","Colorful Guizhou"],
-        ["GT","Air Guilin"],
-        ["JD","Beijing Capital"],
-        ["CN","Grand China"],
-        ["Y8","Yangtze River"],
-        ["HT","Tianjin Air Cargo"],
-        ["CF","China Postal"],
-        ["CK","China Cargo"],
-        ["IJ","Spring Japan"],
-        ["BC","Skymark"],
-        ["MM","Peach"],
-        ["GK","Jetstar Japan"],
-        ["JW","Vanilla Air"],
-        ["HD","Air Do"],
-        ["7G","StarFlyer"],
-        ["NQ","Air Japan"],
-        ["FW","Ibex"],
-        ["JH","Fuji Dream"],
-        ["OC","Oriental Air"],
-        ["6J","Solaseed"],
-        ["NU","Japan Transocean"],
-        ["EH","ANA Wings"],
-        ["NH","All Nippon"],
-        ["JL","Japan Airlines"]
+    ["LOT","LOT Polish Airlines"],
+    ["ENT","Enter Air"],
+    ["SPP","SprintAir"],
+    ["CLW","Buzz"],
+    ["WZZ","Wizz Air"],
+    ["RYR","Ryanair"],
+    ["BDF","Bluebird Nordic"],
+
+    /* =========================================================
+       NIEMCY
+       ========================================================= */
+
+    ["DLH","Lufthansa"],
+    ["GEC","Lufthansa Cargo"],
+    ["EWG","Eurowings"],
+    ["CLH","Lufthansa CityLine"],
+    ["CFG","Condor"],
+    ["BER","Air Berlin"],
+    ["GWI","Germanwings"],
+    ["TUI","TUI fly"],
+    ["BLX","TUI fly Belgium"],
+    ["HLX","Hapag-Lloyd"],
+    ["GMI","Germania"],
+    ["AHO","Air Hamburg"],
+
+    /* =========================================================
+       UK / IRLANDIA
+       ========================================================= */
+
+    ["BAW","British Airways"],
+    ["SHT","British Airways Shuttle"],
+    ["EIN","Aer Lingus"],
+    ["EXS","Jet2"],
+    ["TOM","TUI Airways"],
+    ["VIR","Virgin Atlantic"],
+    ["LOG","Loganair"],
+    ["EZE","Eastern Airways"],
+    ["MON","Monarch Airlines"],
+    ["TCX","Thomas Cook Airlines"],
+    ["BMA","bmi"],
+    ["BEE","Flybe"],
+    ["AUR","Aurigny Air Services"],
+    ["AWC","Titan Airways"],
+    ["JCB","Jota Aviation"],
+
+    /* =========================================================
+       FRANCJA
+       ========================================================= */
+
+    ["AFR","Air France"],
+    ["HOP","Air France HOP"],
+    ["CCM","Air Corsica"],
+    ["FBU","French Bee"],
+    ["FWI","Air Caraïbes"],
+    ["CRL","Corsair"],
+    ["TVF","Transavia France"],
+
+    /* =========================================================
+       HOLANDIA / BELGIA
+       ========================================================= */
+
+    ["KLM","KLM"],
+    ["KLC","KLM Cityhopper"],
+    ["TRA","Transavia"],
+    ["BEL","Brussels Airlines"],
+    ["JAF","TUI fly Belgium"],
+    ["TFL","TUI fly Netherlands"],
+    ["ABR","ASL Airlines"],
+    ["FPO","ASL Airlines France"],
+
+    /* =========================================================
+       HISZPANIA
+       ========================================================= */
+
+    ["IBE","Iberia"],
+    ["IBS","Iberia Express"],
+    ["VLG","Vueling"],
+    ["VOE","Volotea"],
+    ["AEA","Air Europa"],
+    ["BOS","Binter Canarias"],
+    ["RZO","Clever"],
+    ["VVC","Viva Colombia"],
+
+    /* =========================================================
+       PORTUGALIA
+       ========================================================= */
+
+    ["TAP","TAP Air Portugal"],
+    ["RVP","Sevenair"],
+    ["WHT","White Airways"],
+    ["S4A","Azores Airlines"],
+
+    /* =========================================================
+       WŁOCHY
+       ========================================================= */
+
+    ["ITY","ITA Airways"],
+    ["AZA","Alitalia"],
+    ["DLA","Air Dolomiti"],
+    ["VIC","Volotea Italy"],
+
+    /* =========================================================
+       SZWAJCARIA / AUSTRIA
+       ========================================================= */
+
+    ["SWR","Swiss"],
+    ["EDW","Edelweiss Air"],
+    ["AUA","Austrian Airlines"],
+    ["TYR","Tyrolean Airways"],
+
+    /* =========================================================
+       BAŁKANY
+       ========================================================= */
+
+    ["AEE","Aegean Airlines"],
+    ["OAL","Olympic Air"],
+    ["AJA","Air Serbia"],
+    ["ASL","Air Serbia"],
+    ["MNE","Montenegro Airlines"],
+    ["CTN","Croatia Airlines"],
+    ["ADL","Adria Airways"],
+    ["JP","Adria Airways"],
+    ["LZB","Bulgaria Air"],
+    ["BUL","Bulgarian Air Charter"],
+    ["CSA","Czech Airlines"],
+    ["TVS","Smartwings"],
+    ["TDR","Trade Air"],
+    ["KRP","Carpatair"],
+    ["ROT","TAROM"],
+    ["MLD","Air Moldova"],
+
+    /* =========================================================
+       TURCJA
+       ========================================================= */
+
+    ["THY","Turkish Airlines"],
+    ["TKJ","Turkish Airlines"],
+    ["PGT","Pegasus Airlines"],
+    ["SXS","SunExpress"],
+    ["AJT","AnadoluJet"],
+    ["AJA","AnadoluJet"],
+    ["TWI","Tailwind Airlines"],
+    ["OHY","Onur Air"],
+    ["CAI","Corendon Airlines"],
+    ["CND","Corendon Dutch Airlines"],
+    ["FHY","Freebird Airlines"],
+
+    /* =========================================================
+       SKANDYNAWIA
+       ========================================================= */
+
+    ["SAS","SAS Scandinavian Airlines"],
+    ["NAX","Norwegian Air Shuttle"],
+    ["NSZ","Norwegian Air Sweden"],
+    ["NOZ","Norwegian Air Sweden"],
+    ["IBK","Norwegian Air International"],
+    ["FIN","Finnair"],
+    ["BTI","airBaltic"],
+    ["ICE","Icelandair"],
+    ["FIH","Icelandair"],
+    ["WOW","WOW air"],
+    ["DTR","DAT Danish Air Transport"],
+    ["SCW","Braathens Regional Airways"],
+    ["BRX","Braathens Regional Airlines"],
+    ["SNO","Sundair"],
+
+    /* =========================================================
+       ROSJA / DAWNE ZSRR
+       ========================================================= */
+
+    ["AFL","Aeroflot"],
+    ["SDM","Rossiya Airlines"],
+    ["SBI","S7 Airlines"],
+    ["UTA","UTair Aviation"],
+    ["SVR","Ural Airlines"],
+    ["NWS","Nordwind Airlines"],
+    ["AUL","Aurora Airlines"],
+    ["VDA","Volga-Dnepr Airlines"],
+    ["ABW","AirBridgeCargo"],
+    ["WRC","Windrose Airlines"],
+    ["MSI","Motor Sich Airlines"],
+    ["RVN","Russian Sky"],
+
+    /* =========================================================
+       UKRAINA / MOŁDAWIA
+       ========================================================= */
+
+    ["UIA","Ukraine International Airlines"],
+    ["WRC","Windrose Airlines"],
+    ["MSI","Motor Sich Airlines"],
+    ["MLD","Air Moldova"],
+    ["HYS","HiSky"],
+
+    /* =========================================================
+       KAUKAZ / CENTRALNA AZJA
+       ========================================================= */
+
+    ["KZR","Air Astana"],
+    ["TSE","Air Astana"],
+    ["QAZ","Qazaq Air"],
+    ["UZB","Uzbekistan Airways"],
+    ["HYT","Uzbekistan Airways"],
+    ["T5K","Turkmenistan Airlines"],
+    ["TAJ","Tajik Air"],
+    ["KGZ","Avia Traffic Company"],
+    ["AKF","Air Kyrgyzstan"],
+
+    /* =========================================================
+       BLISKI WSCHÓD
+       ========================================================= */
+
+    ["UAE","Emirates"],
+    ["QTR","Qatar Airways"],
+    ["ETD","Etihad Airways"],
+    ["FDB","flydubai"],
+    ["ABY","Air Arabia"],
+    ["GFA","Gulf Air"],
+    ["OMA","Oman Air"],
+    ["MEA","Middle East Airlines"],
+    ["RJA","Royal Jordanian"],
+    ["SVA","Saudia"],
+    ["ELY","El Al"],
+    ["AIZ","Arkia Israeli Airlines"],
+    ["ISR","Israir Airlines"],
+    ["KAC","Kuwait Airways"],
+    ["IAC","Iraqi Airways"],
+    ["SYR","SyrianAir"],
+    ["IRA","Iran Air"],
+    ["IRM","Mahan Air"],
+
+    /* =========================================================
+       AFRYKA PÓŁNOCNA
+       ========================================================= */
+
+    ["RAM","Royal Air Maroc"],
+    ["DAH","Air Algérie"],
+    ["MSR","EgyptAir"],
+    ["MSC","Air Cairo"],
+    ["NIA","Nile Air"],
+    ["TAR","Tunisair"],
+    ["LAA","Libyan Airlines"],
+    ["LNA","Libyan Wings"],
+
+    /* =========================================================
+       AFRYKA WSCHODNIA / CENTRALNA
+       ========================================================= */
+
+    ["ETH","Ethiopian Airlines"],
+    ["KQA","Kenya Airways"],
+    ["RWD","RwandAir"],
+    ["UGX","Uganda Airlines"],
+    ["AFW","Africa World Airlines"],
+    ["BOT","Air Botswana"],
+    ["LMU","LAM Mozambique Airlines"],
+    ["NMB","Air Namibia"],
+    ["SUD","Sudan Airways"],
+
+    /* =========================================================
+       AFRYKA POŁUDNIOWA / WYSPY
+       ========================================================= */
+
+    ["SAA","South African Airways"],
+    ["MAU","Air Mauritius"],
+    ["SEY","Air Seychelles"],
+    ["REU","Air Austral"],
+    ["MDG","Madagascar Airlines"],
+    ["TAAG","TAAG Angola Airlines"],
+    ["COM","Comair"],
+
+    /* =========================================================
+       AMERYKA - USA
+       ========================================================= */
+
+    ["AAL","American Airlines"],
+    ["DAL","Delta Air Lines"],
+    ["UAL","United Airlines"],
+    ["SWA","Southwest Airlines"],
+    ["JBU","JetBlue"],
+    ["ASA","Alaska Airlines"],
+    ["HAL","Hawaiian Airlines"],
+    ["FFT","Frontier Airlines"],
+    ["NKS","Spirit Airlines"],
+    ["SCX","Sun Country Airlines"],
+
+    /* =========================================================
+       USA REGIONAL
+       ========================================================= */
+
+    ["SKW","SkyWest Airlines"],
+    ["RPA","Republic Airways"],
+    ["ENY","Envoy Air"],
+    ["ASH","Mesa Airlines"],
+    ["GJS","GoJet Airlines"],
+    ["PDT","Piedmont Airlines"],
+    ["EDV","Endeavor Air"],
+    ["PSA","PSA Airlines"],
+    ["CPZ","Compass Airlines"],
+    ["JIA","PSA Airlines"],
+    ["LOF","Trans States Airlines"],
+    ["UCA","CommutAir"],
+
+    /* =========================================================
+       KANADA
+       ========================================================= */
+
+    ["ACA","Air Canada"],
+    ["ROU","Air Canada Rouge"],
+    ["WJA","WestJet"],
+    ["JZA","Jazz Aviation"],
+    ["TSC","Air Transat"],
+    ["POE","Porter Airlines"],
+    ["SWG","Sunwing Airlines"],
+
+    /* =========================================================
+       USA CARGO
+       ========================================================= */
+
+    ["FDX","FedEx Express"],
+    ["UPS","UPS Airlines"],
+    ["GTI","Atlas Air"],
+    ["ABX","ABX Air"],
+    ["CKS","Kalitta Air"],
+    ["PAC","Polar Air Cargo"],
+    ["SOO","Southern Air"],
+
+    /* =========================================================
+       MEKSYK / AMERYKA CENTRALNA
+       ========================================================= */
+
+    ["AMX","Aeroméxico"],
+    ["SLI","Aeroméxico Connect"],
+    ["VOI","Volaris"],
+    ["VIV","VivaAerobus"],
+    ["TAO","Aeromar"],
+    ["CMP","Copa Airlines"],
+    ["BWA","Caribbean Airlines"],
+    ["CAY","Cayman Airways"],
+
+    /* =========================================================
+       AMERYKA POŁUDNIOWA
+       ========================================================= */
+
+    ["LAN","LATAM Airlines"],
+    ["TAM","LATAM Brasil"],
+    ["LPE","LATAM Peru"],
+    ["LNE","LATAM Ecuador"],
+    ["LCO","LATAM Colombia"],
+    ["ARG","Aerolíneas Argentinas"],
+    ["GLO","GOL Linhas Aéreas"],
+    ["AZU","Azul"],
+    ["AVA","Avianca"],
+    ["SKY","SKY Airline"],
+    ["JAT","JetSMART"],
+    ["VCV","Conviasa"],
+
+    /* =========================================================
+       CHINY
+       ========================================================= */
+
+    ["CCA","Air China"],
+    ["CAO","Air China Cargo"],
+    ["CES","China Eastern Airlines"],
+    ["CSN","China Southern Airlines"],
+    ["CSZ","Shenzhen Airlines"],
+    ["CHH","Hainan Airlines"],
+    ["CSC","Sichuan Airlines"],
+    ["CXA","XiamenAir"],
+    ["CSH","Shanghai Airlines"],
+    ["DKH","Juneyao Airlines"],
+    ["CQH","Spring Airlines"],
+    ["CDG","Shandong Airlines"],
+    ["QDA","Qingdao Airlines"],
+    ["GCR","China Express Airlines"],
+    ["CUA","China United Airlines"],
+    ["LKE","Lucky Air"],
+    ["RLH","Ruili Airlines"],
+    ["UQW","Urumqi Air"],
+    ["GTA","Air Guilin"],
+    ["CGN","Air Changan"],
+    ["EU","Chengdu Airlines"],
+    ["G5","China Express Airlines"],
+    ["OQ","Chongqing Airlines"],
+    ["KY","Kunming Airlines"],
+    ["8L","Lucky Air"],
+    ["DR","Ruili Airlines"],
+    ["JD","Beijing Capital Airlines"],
+    ["CN","Grand China Air"],
+    ["Y8","Yangtze River Airlines"],
+    ["HT","Tianjin Air Cargo"],
+    ["CK","China Cargo Airlines"],
+    ["MF","XiamenAir"],
+    ["FM","Shanghai Airlines"],
+    ["HO","Juneyao Airlines"],
+    ["9C","Spring Airlines"],
+    ["AQ","9 Air"],
+    ["GJ","Loong Air"],
+    ["NS","Hebei Airlines"],
+    ["PN","West Air"],
+
+    /* =========================================================
+       HONG KONG / MACAO / TAIWAN
+       ========================================================= */
+
+    ["CPA","Cathay Pacific"],
+    ["HDA","Hong Kong Airlines"],
+    ["CRK","Hong Kong Express"],
+    ["CAL","China Airlines"],
+    ["EVA","EVA Air"],
+    ["MDA","Mandarin Airlines"],
+    ["LMR","Air Macau"],
+
+    /* =========================================================
+       JAPONIA
+       ========================================================= */
+
+    ["ANA","All Nippon Airways"],
+    ["NH","All Nippon Airways"],
+    ["JAL","Japan Airlines"],
+    ["JL","Japan Airlines"],
+    ["JJP","Jetstar Japan"],
+    ["APJ","Peach Aviation"],
+    ["BC","Skymark Airlines"],
+    ["SKY","Skymark Airlines"],
+    ["ADO","Air Do"],
+    ["SFJ","Star Flyer"],
+    ["SNJ","Solaseed Air"],
+    ["JAC","Japan Air Commuter"],
+    ["JTA","Japan Transocean Air"],
+    ["IBX","IBEX Airlines"],
+    ["NCA","Nippon Cargo Airlines"],
+    ["SJO","Spring Japan"],
+    ["WAJ","AirJapan"],
+    ["IJ","Spring Japan"],
+    ["MM","Peach Aviation"],
+    ["GK","Jetstar Japan"],
+    ["HD","Air Do"],
+    ["7G","StarFlyer"],
+    ["NQ","Air Japan"],
+    ["FW","Fuji Dream Airlines"],
+    ["JH","Fuji Dream Airlines"],
+    ["OC","Oriental Air Bridge"],
+    ["6J","Solaseed Air"],
+    ["NU","Japan Transocean Air"],
+    ["EH","ANA Wings"],
+
+    /* =========================================================
+       KOREA
+       ========================================================= */
+
+    ["KAL","Korean Air"],
+    ["AAR","Asiana Airlines"],
+    ["JJA","Jeju Air"],
+    ["JNA","Jin Air"],
+    ["ABL","Air Busan"],
+    ["TWB","T'way Air"],
+    ["ESR","Eastar Jet"],
+    ["FGW","Fly Gangwon"],
+
+    /* =========================================================
+       SINGAPUR / MALEZJA
+       ========================================================= */
+
+    ["SIA","Singapore Airlines"],
+    ["TGW","Scoot"],
+    ["MAS","Malaysia Airlines"],
+    ["AXM","AirAsia"],
+    ["XAX","AirAsia X"],
+    ["TGG","Tigerair"],
+    ["RMY","Raya Airways"],
+
+    /* =========================================================
+       TAJLANDIA
+       ========================================================= */
+
+    ["THA","Thai Airways"],
+    ["AIQ","Thai AirAsia"],
+    ["TLM","Thai Lion Air"],
+    ["VZ","Thai VietJet Air"],
+
+    /* =========================================================
+       INDONEZJA
+       ========================================================= */
+
+    ["GIA","Garuda Indonesia"],
+    ["LNI","Lion Air"],
+    ["BTK","Batik Air"],
+    ["CTV","Citilink"],
+    ["AWQ","Indonesia AirAsia"],
+    ["SJY","Sriwijaya Air"],
+
+    /* =========================================================
+       FILIPINY
+       ========================================================= */
+
+    ["PAL","Philippine Airlines"],
+    ["CEB","Cebu Pacific"],
+    ["APG","AirAsia Philippines"],
+
+    /* =========================================================
+       WIETNAM
+       ========================================================= */
+
+    ["HVN","Vietnam Airlines"],
+    ["VJC","VietJet Air"],
+    ["VAG","Vietravel Airlines"],
+    ["BAV","Bamboo Airways"],
+
+    /* =========================================================
+       INDIE
+       ========================================================= */
+
+    ["AIC","Air India"],
+    ["IGO","IndiGo"],
+    ["SEJ","SpiceJet"],
+    ["VTI","Vistara"],
+    ["JAI","Jet Airways"],
+    ["AXB","Air India Express"],
+    ["AKJ","Akasa Air"],
+
+    /* =========================================================
+       AUSTRALIA
+       ========================================================= */
+
+    ["QFA","Qantas"],
+    ["VOZ","Virgin Australia"],
+    ["JST","Jetstar Airways"],
+    ["QLK","QantasLink"],
+    ["RXA","Regional Express"],
+
+    /* =========================================================
+       NOWA ZELANDIA / PACYFIK
+       ========================================================= */
+
+    ["ANZ","Air New Zealand"],
+    ["FJI","Fiji Airways"],
+    ["SOL","Solomon Airlines"],
+    ["PPT","Air Tahiti Nui"],
+    ["TAH","Air Tahiti"],
+
+    /* =========================================================
+       DUŻE CARGO
+       ========================================================= */
+
+    ["GEC","Lufthansa Cargo"],
+    ["FDX","FedEx Express"],
+    ["UPS","UPS Airlines"],
+    ["GTI","Atlas Air"],
+    ["ABX","ABX Air"],
+    ["CKS","Kalitta Air"],
+    ["PAC","Polar Air Cargo"],
+    ["CLX","Cargolux"],
+    ["BCS","European Air Transport"],
+    ["MPH","Martinair Cargo"],
+    ["NCA","Nippon Cargo Airlines"],
+    ["CAO","Air China Cargo"],
+    ["CK","China Cargo Airlines"],
+    ["TAY","TNT Airways"],
+    ["DHX","DHL Aviation"],
+
+    /* =========================================================
+       ACMI / CHARTER / LEASING
+       ========================================================= */
+
+    ["ENT","Enter Air"],
+    ["SPP","SprintAir"],
+    ["CLW","Buzz"],
+    ["RYS","Ryanair Sun"],
+    ["LDE","Lauda Europe"],
+    ["LDM","Lauda Europe"],
+    ["WMT","Wizz Air Malta"],
+    ["WUK","Wizz Air UK"],
+    ["EJU","easyJet Europe"],
+    ["EZS","easyJet Switzerland"],
+    ["TVF","Transavia France"],
+    ["TRA","Transavia"],
+    ["TUI","TUI fly"],
+    ["CFG","Condor"],
+    ["AWC","Titan Airways"],
+    ["ASL","ASL Airlines"],
+    ["FPO","ASL Airlines France"],
+    ["HYS","HiSky"],
+    ["TDR","Trade Air"],
+    ["WHT","White Airways"],
+
+    /* =========================================================
+       AFRYKA - DODATKOWE
+       ========================================================= */
+
+    ["ETH","Ethiopian Airlines"],
+    ["SAA","South African Airways"],
+    ["KQA","Kenya Airways"],
+    ["RWD","RwandAir"],
+    ["UGX","Uganda Airlines"],
+    ["RAM","Royal Air Maroc"],
+    ["DAH","Air Algérie"],
+    ["MSR","EgyptAir"],
+    ["MSC","Air Cairo"],
+    ["NIA","Nile Air"],
+    ["MAU","Air Mauritius"],
+    ["SEY","Air Seychelles"],
+    ["REU","Air Austral"],
+    ["MDG","Madagascar Airlines"],
+    ["TAAG","TAAG Angola Airlines"],
+    ["BOT","Air Botswana"],
+    ["AFW","Africa World Airlines"],
+    ["LMU","LAM Mozambique Airlines"],
+    ["NMB","Air Namibia"],
+
+    /* =========================================================
+       DODATKOWE DUŻE LINIE ŚWIATOWE
+       ========================================================= */
+
+    ["AIC","Air India"],
+    ["SIA","Singapore Airlines"],
+    ["CPA","Cathay Pacific"],
+    ["ANA","All Nippon Airways"],
+    ["JAL","Japan Airlines"],
+    ["KAL","Korean Air"],
+    ["AAR","Asiana Airlines"],
+    ["QFA","Qantas"],
+    ["VOZ","Virgin Australia"],
+    ["CCA","Air China"],
+    ["CES","China Eastern"],
+    ["CSN","China Southern"],
+    ["EVA","EVA Air"],
+    ["CAL","China Airlines"],
+    ["MAS","Malaysia Airlines"],
+    ["THA","Thai Airways"],
+    ["GIA","Garuda Indonesia"],
+    ["PAL","Philippine Airlines"],
+    ["HVN","Vietnam Airlines"],
+    ["VJC","VietJet Air"],
+    ["IGO","IndiGo"],
+
+    /* =========================================================
+       DODATKOWE WARIANTY / ALIASY Z TWOJEJ LISTY
+       ========================================================= */
+
+    ["FR","Ryanair - IATA"],
+    ["U2","easyJet - IATA"],
+    ["BA","British Airways - IATA"],
+    ["LH","Lufthansa - IATA"],
+    ["AF","Air France - IATA"],
+    ["KL","KLM - IATA"],
+    ["IB","Iberia - IATA"],
+    ["TP","TAP Air Portugal - IATA"],
+    ["AZ","ITA Airways - IATA"],
+    ["SU","Aeroflot - IATA"],
+    ["TK","Turkish Airlines - IATA"],
+    ["EK","Emirates - IATA"],
+    ["QR","Qatar Airways - IATA"],
+    ["EY","Etihad Airways - IATA"],
+    ["SV","Saudia - IATA"],
+    ["MS","EgyptAir - IATA"],
+    ["ET","Ethiopian Airlines - IATA"],
+    ["SA","South African Airways - IATA"],
+    ["KQ","Kenya Airways - IATA"],
+    ["AT","Royal Air Maroc - IATA"],
+    ["AI","Air India - IATA"],
+    ["9W","Jet Airways - IATA"],
+    ["6E","IndiGo - IATA"],
+    ["SG","SpiceJet - IATA"],
+    ["G8","Go First / GoAir - IATA"],
+    ["I5","AirAsia India - IATA"],
+    ["UK","Vistara - IATA"],
+    ["NH","ANA - IATA"],
+    ["JL","JAL - IATA"],
+    ["KE","Korean Air - IATA"],
+    ["OZ","Asiana Airlines - IATA"],
+    ["CA","Air China - IATA"],
+    ["MU","China Eastern - IATA"],
+    ["CZ","China Southern - IATA"],
+    ["HU","Hainan Airlines - IATA"],
+    ["3U","Sichuan Airlines - IATA"],
+    ["MF","XiamenAir - IATA"],
+    ["FM","Shanghai Airlines - IATA"],
+    ["HO","Juneyao Airlines - IATA"],
+    ["9C","Spring Airlines - IATA"],
+    ["IJ","Spring Japan - IATA"],
+    ["BC","Skymark - IATA"],
+    ["MM","Peach - IATA"],
+    ["GK","Jetstar Japan - IATA"],
+    ["HD","Air Do - IATA"],
+    ["7G","StarFlyer - IATA"],
+    ["NQ","AirJapan - IATA"],
+    ["FW","Fuji Dream - IATA"],
+    ["JH","Fuji Dream - IATA"],
+    ["6J","Solaseed - IATA"],
+    ["NU","Japan Transocean - IATA"],
+    ["EH","ANA Wings - IATA"],
+
 
     ];
 
