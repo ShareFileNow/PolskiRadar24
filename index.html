@@ -1852,7 +1852,6 @@ const translations = {
         path_source: "Niebieski tor lotu",
         last_contact: "Ostatni kontakt",
         lbl_operator: "Operator",
-        lbl_route: "Trasa",
         no_photo: "Zdjęcie poglądowe",
         lbl_manufacturer: "Producent",
         lbl_model: "Model",
@@ -1962,7 +1961,6 @@ const translations = {
         on_ground: "On ground",
         in_air: "In the air",
         unknown_op: "Unknown operator",
-        lbl_route: "Route",
         ground_label: "ON GROUND",
         air_label: "IN THE AIR",
         climbing: "↗ Climbing",
@@ -5637,8 +5635,6 @@ async function updateFlightCard(f){
         );
 
 
-    const routeValue = String(f.route || "N/A").trim() || "N/A";
-
     const heading =
         getFlightDirection(
             f
@@ -6101,22 +6097,6 @@ async function updateFlightCard(f){
                             f.operator ||
                             airline.name ||
                             "—"
-                        )}
-                    </b>
-
-                </div>
-
-
-                <div class="stat">
-
-                    <small>
-                        ${t("lbl_route")}
-                    </small>
-
-                    <b data-aircraft-route>
-                        ${escapeHtml(
-                            f.route ||
-                            "N/A"
                         )}
                     </b>
 
@@ -8160,13 +8140,6 @@ function updateLiveCard(f){
         );
 
 
-    const routeValue = String(f.route || "N/A").trim() || "N/A";
-    const routeValue = String(f.route || "N/A").trim() || "N/A";
-    const routeEl = card.querySelector("[data-aircraft-route]");
-    if(routeEl)
-        routeEl.textContent = routeValue;
-
-
     const stats =
         card.querySelectorAll(
             ".stat b"
@@ -8177,7 +8150,7 @@ function updateLiveCard(f){
         stats.length >= 12
     ){
 
-        stats[4].textContent =
+        stats[3].textContent =
             Number.isFinite(f.alt)
             ?
             Math.round(
@@ -8192,7 +8165,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[5].textContent =
+        stats[4].textContent =
             Number.isFinite(f.alt)
             ?
             Math.round(
@@ -8204,7 +8177,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[6].textContent =
+        stats[5].textContent =
             Number.isFinite(f.rate)
             ?
             (
@@ -8224,7 +8197,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[7].textContent =
+        stats[6].textContent =
             Number.isFinite(f.speed)
             ?
             Math.round(
@@ -8236,7 +8209,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[8].textContent =
+        stats[7].textContent =
             Number.isFinite(f.speed)
             ?
             Math.round(
@@ -8248,7 +8221,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[9].textContent =
+        stats[8].textContent =
             Number.isFinite(f.speed)
             ?
             Math.round(
@@ -8260,7 +8233,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[10].textContent =
+        stats[9].textContent =
             Number.isFinite(f.lat)
             ?
             f.lat.toFixed(5)
@@ -8270,7 +8243,7 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[11].textContent =
+        stats[10].textContent =
             Number.isFinite(f.lon)
             ?
             f.lon.toFixed(5)
@@ -8280,20 +8253,20 @@ function updateLiveCard(f){
             "—";
 
 
-        stats[12].textContent =
+        stats[11].textContent =
             f.squawk ||
             "—";
 
 
         if(stats[12])
-            stats[13].textContent =
+            stats[12].textContent =
                 getFlightStatus(
                     f
                 );
 
 
         if(stats[13])
-            stats[14].textContent =
+            stats[13].textContent =
                 heading !== null
                 ?
                 Math.round(
@@ -8310,7 +8283,7 @@ function updateLiveCard(f){
 
 
         if(stats[14])
-            stats[15].textContent =
+            stats[14].textContent =
                 getFlightDistance() > 0
                 ?
                 getFlightDistance()
@@ -8322,7 +8295,7 @@ function updateLiveCard(f){
 
 
         if(stats[15])
-            stats[16].textContent =
+            stats[15].textContent =
                 getContactAge(
                     f.lastContact
                 );
@@ -8514,9 +8487,6 @@ async function load(){
 
                     operator:
                         item.operator,
-
-                    route:
-                        item.route || "N/A",
 
                     country:
                         item.country,
