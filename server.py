@@ -30,7 +30,7 @@ OPENSKY_URL = (
     "dist/300"
 )
 
-UPDATE_SECONDS = 5
+UPDATE_SECONDS = 3
 
 
 # ============================================================
@@ -76,112 +76,6 @@ def is_ground_altitude(value):
         isinstance(value, str)
         and value.strip().lower() == "ground"
     )
-
-
-# ============================================================
-# ROUTE LOOKUP (ADSB.lol)
-# ============================================================
-
-def fetch_routes(aircraft_list):
-    """Pobiera trasy z ADSB.lol routeset. Nie wpływa na sam ADS-B."""
-    result = {}
-    planes = []
-
-    for a in aircraft_list:
-        callsign = str(a.get("callsign") or "").strip().upper()
-        lat = a.get("lat")
-        lon = a.get("lon")
-        if not callsign or lat is None or lon is None:
-            continue
-        planes.append({"callsign": callsign, "lat": lat, "lng": lon})
-
-    if not planes:
-        return result
-
-    try:
-        for offset in range(0, len(planes), 100):
-            batch = planes[offset:offset + 100]
-            request = Request(
-                "https://api.adsb.lol/api/0/routeset",
-                data=json.dumps({"planes": batch}).encode("utf-8"),
-                headers={
-                    "User-Agent": "Mozilla/5.0 MyFlightRadar/Ultimate",
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                method="POST"
-            )
-
-            with urlopen(request, timeout=6) as response:
-                raw = response.read()
-
-            routes = json.loads(raw.decode("utf-8"))
-            if not isinstance(routes, list):
-                continue
-
-            for item in routes:
-                if not isinstance(item, dict):
-                    continue
-
-                callsign = str(item.get("callsign") or "").strip().upper()
-                airports = item.get("_airports") or []
-                names = []
-
-                for airport in airports:
-                    if not isinstance(airport, dict):
-                        continue
-                    name = str(
-                        airport.get("location")
-                        or airport.get("name")
-                        or ""
-                    ).strip()
-                    if name and name not in names:
-                        names.append(name)
-
-                route = (
-                    "-".join(names)
-                    if len(names) >= 2
-                    else str(item.get("_airport_codes_iata") or "").strip()
-                )
-
-                if callsign:
-                    result[callsign] = route if route else "N/A"
-
-    except Exception as e:
-        print("[ROUTE] BŁĄD:", type(e).__name__, str(e))
-
-    return result
-
-
-route_cache = {}
-ROUTE_CACHE_SECONDS = 900
-
-def apply_routes(cleaned):
-    now = time.time()
-    needed = []
-
-    for aircraft in cleaned:
-        callsign = str(aircraft.get("callsign") or "").strip().upper()
-        if not callsign:
-            aircraft["route"] = "N/A"
-            continue
-
-        cached = route_cache.get(callsign)
-        if cached and now - cached[0] < ROUTE_CACHE_SECONDS:
-            aircraft["route"] = cached[1]
-        else:
-            aircraft["route"] = "N/A"
-            needed.append(aircraft)
-
-    if not needed:
-        return
-
-    routes = fetch_routes(needed)
-    for aircraft in needed:
-        callsign = str(aircraft.get("callsign") or "").strip().upper()
-        route = routes.get(callsign, "N/A")
-        route_cache[callsign] = (now, route)
-        aircraft["route"] = route
 
 
 # ============================================================
@@ -316,18 +210,12 @@ def fetch_opensky():
 
             cleaned.append(aircraft)
 
-        # Najpierw publikujemy świeże pozycje ADS-B. Trasa jest tylko dodatkiem.
+        # Aktualizacja danych
         with data_lock:
+
             states = cleaned
             last_update = time.time()
             last_error = ""
-
-        # Dociągamy trasę w osobnym wątku, żeby routeset nigdy nie blokował ADS-B.
-        threading.Thread(
-            target=apply_routes,
-            args=(cleaned,),
-            daemon=True
-        ).start()
 
         print(
             "[ADS-B] OK - aktywne samoloty: {}".format(
