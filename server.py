@@ -30,7 +30,7 @@ OPENSKY_URL = (
     "dist/300"
 )
 
-UPDATE_SECONDS = 3
+UPDATE_SECONDS = 5
 
 
 # ============================================================
@@ -76,6 +76,83 @@ def is_ground_altitude(value):
         isinstance(value, str)
         and value.strip().lower() == "ground"
     )
+
+
+# ============================================================
+# ROUTE LOOKUP (ADSB.lol)
+# ============================================================
+
+def fetch_routes(aircraft_list):
+    """Pobiera trasę dla callsignów z ADSB.lol routeset.
+
+    Zwraca mapę CALLSIGN -> pełna trasa, np.
+    "Katowice-Barcelona". Gdy trasy nie ma: "N/A".
+    """
+    result = {}
+
+    planes = []
+    for a in aircraft_list:
+        callsign = str(a.get("callsign") or "").strip().upper()
+        if not callsign:
+            continue
+        lat = a.get("lat")
+        lon = a.get("lon")
+        if lat is None or lon is None:
+            continue
+        planes.append({
+            "callsign": callsign,
+            "lat": lat,
+            "lng": lon
+        })
+
+    if not planes:
+        return result
+
+    try:
+        request = Request(
+            "https://api.adsb.lol/api/0/routeset",
+            data=json.dumps({"planes": planes}).encode("utf-8"),
+            headers={
+                "User-Agent": "Mozilla/5.0 MyFlightRadar/Ultimate",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+
+        with urlopen(request, timeout=12) as response:
+            raw = response.read()
+
+        routes = json.loads(raw.decode("utf-8"))
+        if not isinstance(routes, list):
+            return result
+
+        for item in routes:
+            if not isinstance(item, dict):
+                continue
+
+            callsign = str(item.get("callsign") or "").strip().upper()
+            airports = item.get("_airports") or []
+
+            names = []
+            for airport in airports:
+                if not isinstance(airport, dict):
+                    continue
+                name = str(airport.get("location") or airport.get("name") or "").strip()
+                if name and name not in names:
+                    names.append(name)
+
+            # Prefer full airport/city names. If unavailable, use IATA codes.
+            route = "-".join(names) if len(names) >= 2 else str(
+                item.get("_airport_codes_iata") or ""
+            ).strip()
+
+            result[callsign] = route if route else "N/A"
+
+    except Exception as e:
+        print("[ROUTE] BŁĄD:", type(e).__name__, str(e))
+
+    return result
 
 
 # ============================================================
@@ -209,6 +286,12 @@ def fetch_opensky():
             }
 
             cleaned.append(aircraft)
+
+        # Trasa jest dodatkowym polem i nie zmienia żadnych danych ADS-B.
+        routes = fetch_routes(cleaned)
+        for aircraft in cleaned:
+            callsign = str(aircraft.get("callsign") or "").strip().upper()
+            aircraft["route"] = routes.get(callsign, "N/A") if callsign else "N/A"
 
         # Aktualizacja danych
         with data_lock:
