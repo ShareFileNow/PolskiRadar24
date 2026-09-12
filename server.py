@@ -286,13 +286,35 @@ def apply_routes(aircraft_list):
 
 
 def route_worker(cleaned):
+    """Pobiera trasy i dopisuje je do NAJNOWSZEJ listy samolotów.
+
+    Nie używamy tutaj `states is cleaned`, bo w czasie zapytania
+    ADS-B może już pobrać kolejną paczkę danych. W takim przypadku
+    stara wersja worker'a wyrzucała świeżo pobrane trasy i frontend
+    cały czas dostawał N/A.
+    """
     try:
         apply_routes(cleaned)
 
-        # Aktualizujemy listę dopiero po zakończeniu route lookup.
+        routes_by_call = {}
+        for aircraft in cleaned:
+            callsign = clean_callsign(
+                aircraft.get("callsign")
+            )
+            route = safe_route_value(
+                aircraft.get("route")
+            )
+            if callsign and route != "N/A":
+                routes_by_call[callsign] = route
+
+        # Scal trasę z NAJNOWSZĄ wersją ADS-B.
         with data_lock:
-            if states is cleaned:
-                states = list(cleaned)
+            for aircraft in states:
+                callsign = clean_callsign(
+                    aircraft.get("callsign")
+                )
+                if callsign in routes_by_call:
+                    aircraft["route"] = routes_by_call[callsign]
 
     except Exception as e:
         print(
