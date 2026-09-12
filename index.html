@@ -9089,12 +9089,34 @@ document
    GEOLOKALIZACJA
 ========================================================= */
 
+let myLocationMarker = null;
+let myLocationVisible = false;
+
 document
     .getElementById(
         "locateBtn"
     )
     .onclick =
         function(){
+
+            if(myLocationVisible){
+
+                if(
+                    myLocationMarker &&
+                    map.hasLayer(
+                        myLocationMarker
+                    )
+                ){
+                    map.removeLayer(
+                        myLocationMarker
+                    );
+                }
+
+                myLocationMarker = null;
+                myLocationVisible = false;
+
+                return;
+            }
 
             if(
                 !navigator.geolocation
@@ -9105,9 +9127,7 @@ document
                 );
 
                 return;
-
             }
-
 
             navigator
                 .geolocation
@@ -9119,32 +9139,39 @@ document
                             position.coords
                             .latitude;
 
-
                         const lon =
                             position.coords
                             .longitude;
 
+                        if(
+                            myLocationMarker &&
+                            map.hasLayer(
+                                myLocationMarker
+                            )
+                        ){
+                            map.removeLayer(
+                                myLocationMarker
+                            );
+                        }
 
-                        L.circleMarker(
-                            [
-                                lat,
-                                lon
-                            ],
-                            {
-                                radius:9,
+                        myLocationMarker =
+                            L.circleMarker(
+                                [
+                                    lat,
+                                    lon
+                                ],
+                                {
+                                    radius:9,
+                                    color:"#25c7ff",
+                                    fillColor:"#25c7ff",
+                                    fillOpacity:.9,
+                                    weight:3
+                                }
+                            ).addTo(
+                                map
+                            );
 
-                                color:"#25c7ff",
-
-                                fillColor:"#25c7ff",
-
-                                fillOpacity:.9,
-
-                                weight:3
-                            }
-                        ).addTo(
-                            map
-                        );
-
+                        myLocationVisible = true;
 
                         map.flyTo(
                             [
@@ -9159,7 +9186,6 @@ document
 
                     },
 
-
                     () =>
                         showToast(
                             t("toast_pos")
@@ -9168,8 +9194,6 @@ document
                 );
 
         };
-
-
 /* =========================================================
    MAP DRAG
 ========================================================= */
