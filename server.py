@@ -36,7 +36,10 @@ UPDATE_SECONDS = 3
 # ROUTE API
 # ============================================================
 
-ROUTE_URL = "https://api.adsb.lol/api/0/routeset"
+ROUTE_URLS = (
+    "https://adsb.im/api/0/routeset",
+    "https://api.adsb.lol/api/0/routeset",
+)
 ROUTE_CACHE_SECONDS = 900
 
 route_cache = {}
@@ -110,49 +113,48 @@ def safe_route_value(value):
 
 
 def route_from_item(item):
+    # Najlepszy przypadek: pełne miasta z _airports.
     airports = item.get("_airports") or []
     names = []
 
     for airport in airports:
         if not isinstance(airport, dict):
             continue
-
-        location = str(
-            airport.get("location") or ""
-        ).strip()
-
-        if location:
+        location = str(airport.get("location") or "").strip()
+        if location and location not in names:
             names.append(location)
 
     if len(names) >= 2:
         return f"{names[0]}-{names[-1]}"
 
+    # Czasem provider zwraca airport_codes zamiast _airports.
     codes = str(
-        item.get("_airport_codes_iata") or ""
+        item.get("_airport_codes_iata")
+        or item.get("airport_codes_iata")
+        or item.get("airport_codes")
+        or ""
     ).strip()
 
     return codes if codes else "N/A"
 
 
 def fetch_routes(aircraft_list):
-    """Pobiera trasy z ADSB.lol. Maksymalnie 100 samolotów na request."""
+    """Route lookup z dwoma providerami + fallback pojedynczego samolotu.
 
+    Najpierw adsb.im, potem adsb.lol. Jeśli batch nie zwróci trasy,
+    próbujemy jeszcze pojedynczego callsignu. Dzięki temu N/A nie zostaje
+    tylko dlatego, że jeden batch/API chwilowo nie odpowiedział.
+    """
     if not aircraft_list:
         return {}
 
     planes = []
-
     for aircraft in aircraft_list:
-        callsign = clean_callsign(
-            aircraft.get("callsign")
-        )
-
+        callsign = clean_callsign(aircraft.get("callsign"))
         lat = aircraft.get("lat")
         lon = aircraft.get("lon")
-
         if not callsign or lat is None or lon is None:
             continue
-
         planes.append({
             "callsign": callsign,
             "lat": lat,
@@ -161,63 +163,65 @@ def fetch_routes(aircraft_list):
 
     result = {}
 
-    for start in range(0, len(planes), 100):
-        chunk = planes[start:start + 100]
-
-        try:
-            body = json.dumps({
-                "planes": chunk
-            }).encode("utf-8")
-
-            request = Request(
-                ROUTE_URL,
-                data=body,
-                headers={
-                    "User-Agent": "MyFlightRadar/Ultimate",
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                },
-                method="POST",
-            )
-
-            with urlopen(request, timeout=12) as response:
-                raw = response.read()
-
-            data = json.loads(
-                raw.decode("utf-8")
-            )
-
-            if not isinstance(data, list):
+    def parse_response(data):
+        if not isinstance(data, list):
+            return
+        for item in data:
+            if not isinstance(item, dict):
                 continue
+            callsign = clean_callsign(item.get("callsign"))
+            if not callsign:
+                continue
+            route = safe_route_value(route_from_item(item))
+            if route != "N/A":
+                result[callsign] = route
 
-            for item in data:
-                if not isinstance(item, dict):
-                    continue
+    def request_provider(url, chunk):
+        body = json.dumps({"planes": chunk}).encode("utf-8")
+        request = Request(
+            url,
+            data=body,
+            headers={
+                "User-Agent": "Mozilla/5.0 MyFlightRadar/RouteLookup",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urlopen(request, timeout=15) as response:
+            raw = response.read()
+        return json.loads(raw.decode("utf-8"))
 
-                callsign = clean_callsign(
-                    item.get("callsign")
-                )
+    # 50 zamiast 100 — mniejsza szansa na rate-limit i większa stabilność.
+    for start in range(0, len(planes), 50):
+        chunk = planes[start:start + 50]
+        got_before = len(result)
 
-                if not callsign:
-                    continue
+        for url in ROUTE_URLS:
+            try:
+                parse_response(request_provider(url, chunk))
+            except Exception as e:
+                print("[ROUTE] Provider error:", url, type(e).__name__, str(e))
 
-                route = safe_route_value(
-                    route_from_item(item)
-                )
+            # Nie ma sensu pytać drugiego providera o samoloty, które już mamy.
+            if len(result) > got_before:
+                # nadal przejdziemy do kolejnych chunków
+                break
 
-                if route != "N/A":
-                    result[callsign] = route
-
-        except Exception as e:
-            # Awaria route API NIE może wyłączyć ADS-B.
-            print(
-                "[ROUTE] Błąd:",
-                type(e).__name__,
-                str(e),
-            )
+    # Ostatni fallback: tylko dla samolotów bez trasy, po jednym.
+    missing = [p for p in planes if p["callsign"] not in result]
+    for plane in missing:
+        for url in ROUTE_URLS:
+            try:
+                data = request_provider(url, [plane])
+                before = len(result)
+                parse_response(data)
+                if len(result) > before:
+                    break
+            except Exception as e:
+                print("[ROUTE] Single lookup error:", type(e).__name__, str(e))
 
     return result
-
 
 def apply_routes(aircraft_list):
     """Dodaje trasy, używając cache i zachowując poprzednią trasę."""
@@ -726,7 +730,7 @@ def main():
     )
 
     print(
-        "ROUTES: {}".format(ROUTE_URL)
+        "ROUTES: adsb.im -> adsb.lol"
     )
 
     print(
