@@ -32,6 +32,15 @@ OPENSKY_URL = (
 
 UPDATE_SECONDS = 3
 
+# ============================================================
+# ROUTE API
+# ============================================================
+
+ROUTE_URL = "https://api.adsb.lol/api/0/routeset"
+ROUTE_CACHE_SECONDS = 900
+
+route_cache = {}
+
 
 # ============================================================
 # GLOBAL DATA
@@ -76,6 +85,221 @@ def is_ground_altitude(value):
         isinstance(value, str)
         and value.strip().lower() == "ground"
     )
+
+
+# ============================================================
+# ROUTE LOOKUP
+# ============================================================
+
+def clean_callsign(value):
+    if value is None:
+        return ""
+    return str(value).strip().upper()
+
+
+def safe_route_value(value):
+    if value is None:
+        return "N/A"
+
+    value = str(value).strip()
+
+    if not value or value in {"...", "…", "null", "None"}:
+        return "N/A"
+
+    return value
+
+
+def route_from_item(item):
+    airports = item.get("_airports") or []
+    names = []
+
+    for airport in airports:
+        if not isinstance(airport, dict):
+            continue
+
+        location = str(
+            airport.get("location") or ""
+        ).strip()
+
+        if location:
+            names.append(location)
+
+    if len(names) >= 2:
+        return f"{names[0]}-{names[-1]}"
+
+    codes = str(
+        item.get("_airport_codes_iata") or ""
+    ).strip()
+
+    return codes if codes else "N/A"
+
+
+def fetch_routes(aircraft_list):
+    """Pobiera trasy z ADSB.lol. Maksymalnie 100 samolotów na request."""
+
+    if not aircraft_list:
+        return {}
+
+    planes = []
+
+    for aircraft in aircraft_list:
+        callsign = clean_callsign(
+            aircraft.get("callsign")
+        )
+
+        lat = aircraft.get("lat")
+        lon = aircraft.get("lon")
+
+        if not callsign or lat is None or lon is None:
+            continue
+
+        planes.append({
+            "callsign": callsign,
+            "lat": lat,
+            "lng": lon,
+        })
+
+    result = {}
+
+    for start in range(0, len(planes), 100):
+        chunk = planes[start:start + 100]
+
+        try:
+            body = json.dumps({
+                "planes": chunk
+            }).encode("utf-8")
+
+            request = Request(
+                ROUTE_URL,
+                data=body,
+                headers={
+                    "User-Agent": "MyFlightRadar/Ultimate",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+
+            with urlopen(request, timeout=12) as response:
+                raw = response.read()
+
+            data = json.loads(
+                raw.decode("utf-8")
+            )
+
+            if not isinstance(data, list):
+                continue
+
+            for item in data:
+                if not isinstance(item, dict):
+                    continue
+
+                callsign = clean_callsign(
+                    item.get("callsign")
+                )
+
+                if not callsign:
+                    continue
+
+                route = safe_route_value(
+                    route_from_item(item)
+                )
+
+                if route != "N/A":
+                    result[callsign] = route
+
+        except Exception as e:
+            # Awaria route API NIE może wyłączyć ADS-B.
+            print(
+                "[ROUTE] Błąd:",
+                type(e).__name__,
+                str(e),
+            )
+
+    return result
+
+
+def apply_routes(aircraft_list):
+    """Dodaje trasy, używając cache i zachowując poprzednią trasę."""
+
+    now = time.time()
+    lookup = []
+
+    for aircraft in aircraft_list:
+        callsign = clean_callsign(
+            aircraft.get("callsign")
+        )
+
+        if not callsign:
+            aircraft["route"] = "N/A"
+            continue
+
+        cached = route_cache.get(callsign)
+
+        if cached:
+            cached_route = safe_route_value(
+                cached.get("route")
+            )
+
+            cached_time = cached.get("time", 0)
+
+            if (
+                cached_route != "N/A"
+                and now - cached_time < ROUTE_CACHE_SECONDS
+            ):
+                aircraft["route"] = cached_route
+                continue
+
+        lookup.append(aircraft)
+
+    if not lookup:
+        return
+
+    fresh_routes = fetch_routes(lookup)
+
+    for aircraft in lookup:
+        callsign = clean_callsign(
+            aircraft.get("callsign")
+        )
+
+        if callsign in fresh_routes:
+            route = safe_route_value(
+                fresh_routes[callsign]
+            )
+
+            route_cache[callsign] = {
+                "route": route,
+                "time": now,
+            }
+
+            aircraft["route"] = route
+
+        else:
+            # Błąd routeset nie kasuje poprzedniej dobrej trasy.
+            old = route_cache.get(callsign)
+
+            aircraft["route"] = (
+                safe_route_value(old.get("route"))
+                if old
+                else "N/A"
+            )
+
+
+def route_worker(cleaned):
+    try:
+        apply_routes(cleaned)
+
+        # Aktualizujemy listę dopiero po zakończeniu route lookup.
+        with data_lock:
+            if states is cleaned:
+                states = list(cleaned)
+
+    except Exception as e:
+        print(
+            "[ROUTE] Worker error:",
+            type(e).__name__,
+            str(e),
+        )
 
 
 # ============================================================
@@ -205,7 +429,10 @@ def fetch_opensky():
                     item.get(
                         "category",
                         "A0"
-                    )
+                    ),
+
+                "route":
+                    "N/A"
             }
 
             cleaned.append(aircraft)
@@ -222,6 +449,13 @@ def fetch_opensky():
                 len(cleaned)
             )
         )
+
+        # Route API działa osobno, więc nie blokuje odświeżania ADS-B.
+        threading.Thread(
+            target=route_worker,
+            args=(cleaned,),
+            daemon=True,
+        ).start()
 
     except Exception as e:
 
@@ -467,6 +701,10 @@ def main():
 
     print(
         "ADS-B: {}".format(OPENSKY_URL)
+    )
+
+    print(
+        "ROUTES: {}".format(ROUTE_URL)
     )
 
     print(
