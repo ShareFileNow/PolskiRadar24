@@ -836,19 +836,114 @@ body{
 }
 
 .route-box{
-    background:linear-gradient(
-        135deg,
-        #0d2140,
-        #0a1830
-    );
-    border:1px solid var(--panel-b);
-    border-radius:12px;
-    padding:12px;
+    background:#071326;
+    border:1px solid #102038;
+    border-radius:10px;
+    padding:9px 7px 8px;
     margin-bottom:12px;
-    font-size:12.5px;
+    font-size:12px;
     text-align:center;
     font-weight:700;
-    color:var(--accent2);
+    color:#eaf2fb;
+}
+
+.aircraft-route-box{
+    position:relative;
+    overflow:hidden;
+    padding:8px 4px 9px;
+    background:#071326;
+    border:1px solid #102038;
+    color:#fff;
+}
+
+.aircraft-route-title{
+    font-size:8px;
+    letter-spacing:.7px;
+    color:#7c93b3;
+    text-transform:uppercase;
+    margin-bottom:2px;
+}
+
+.aircraft-route-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);
+    align-items:center;
+    min-height:78px;
+    width:100%;
+}
+
+.aircraft-route-airport{
+    min-width:0;
+    text-align:center;
+    padding:0 4px;
+}
+
+.aircraft-route-airport.to{
+    text-align:center;
+}
+
+.aircraft-route-code{
+    font-size:20px;
+    line-height:24px;
+    font-weight:700;
+    color:#eaf2fb;
+    letter-spacing:.2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.aircraft-route-city{
+    margin-top:3px;
+    font-size:11px;
+    line-height:13px;
+    font-weight:500;
+    color:#7c93b3;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.aircraft-route-center{
+    position:relative;
+    height:78px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.aircraft-route-center::before{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:50%;
+    width:2px;
+    transform:translateX(-50%);
+    background:rgba(234,242,251,.25);
+}
+
+.aircraft-route-plane{
+    position:relative;
+    z-index:1;
+    width:43px;
+    height:43px;
+    border-radius:50%;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 0 1px #e2e2e2;
+    font-size:24px;
+    line-height:1;
+    color:#e8a900;
+}
+
+.aircraft-route-empty{
+    text-align:center;
+    font-size:13px;
+    color:#7c93b3;
+    padding:8px 10px 10px;
 }
 
 /* ================= KOMPAS ================= */
@@ -5612,6 +5707,106 @@ function compassSvg(heading){
    KARTA LOTU
 ========================================================= */
 
+function getRouteAirportInfo(value){
+    const raw = String(value ?? "").trim();
+
+    // Brak danych = całe pole N/A. Nie pokazuj np. "N/A Luqa".
+    if(!raw || /^(?:N\/A|—|unknown|unknown airport)$/i.test(raw)){
+        return { code:"N/A", city:"N/A", zone:"" };
+    }
+
+    // Jeśli wejście zawiera jawne N/A, nie traktuj reszty jako nazwy miasta.
+    if(/(?:^|[\s-])N\/A(?:$|[\s-])/i.test(raw)){
+        return { code:"N/A", city:"N/A", zone:"" };
+    }
+
+    const codeMatch = raw.match(/\b[A-Z]{3}\b/);
+    let code = codeMatch ? codeMatch[0] : "";
+    let city = raw.replace(/\b[A-Z]{3}\b/g, "").replace(/^[\s-]+|[\s-]+$/g, "").trim();
+
+    if(typeof airports !== "undefined" && Array.isArray(airports)){
+        const found = airports.find(a =>
+            (code && String(a.iata || "").toUpperCase() === code) ||
+            String(a.city || "").trim().toLowerCase() === raw.toLowerCase() ||
+            String(a.city || "").trim().toLowerCase() === city.toLowerCase()
+        );
+        if(found){
+            code = code || String(found.iata || "").toUpperCase();
+            city = found.city || city;
+        }
+    }
+
+    const commonIata = {
+        "katowice":"KTW","dortmund":"DTM","barcelona":"BCN","warsaw":"WAW","warszawa":"WAW",
+        "krakow":"KRK","kraków":"KRK","london":"LON","paris":"PAR","rome":"ROM",
+        "milan":"MIL","münchen":"MUC","munich":"MUC","berlin":"BER","amsterdam":"AMS",
+        "vienna":"VIE","wiedeń":"VIE","prague":"PRG","praga":"PRG","frankfurt":"FRA",
+        "madrid":"MAD","lisbon":"LIS","lisbona":"LIS","brussels":"BRU","bruksela":"BRU",
+        "copenhagen":"CPH","aalborg":"AAL","oslo":"OSL","stockholm":"ARN","athens":"ATH",
+        "istanbul":"IST","zurich":"ZRH","dublin":"DUB","manchester":"MAN","luqa":"MLA","malta":"MLA"
+    };
+
+    if(!code && commonIata[city.toLowerCase()]) code = commonIata[city.toLowerCase()];
+    if(!city && code) city = code;
+
+    return { code: code || "N/A", city: city || "N/A", zone:"" };
+}
+
+function renderAircraftRoute(route){
+    const raw = String(route || "").trim();
+
+    if(!raw || raw === "N/A" || raw === "—"){
+        return `
+            <div class="aircraft-route-title">TRASA</div>
+            <div class="aircraft-route-empty">N/A</div>
+        `;
+    }
+
+    const parts = raw
+        .split(/\s*[-–—]\s*/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    // Jeśli API zwróci tylko jeden prawidłowy punkt, drugi pozostaje N/A.
+    // Puste/N/A fragmenty nie są traktowane jako prawdziwe lotnisko.
+
+    if(parts.length === 1){
+        const from = getRouteAirportInfo(parts[0]);
+        return `
+            <div class="aircraft-route-title">TRASA</div>
+            <div class="aircraft-route-row">
+                <div class="aircraft-route-airport">
+                    <div class="aircraft-route-code">${escapeHtml(from.city)}</div>
+                </div>
+                <div class="aircraft-route-center">
+                    <div class="aircraft-route-plane">✈</div>
+                </div>
+                <div class="aircraft-route-airport to">
+                    <div class="aircraft-route-code">N/A</div>
+                </div>
+            </div>
+        `;
+    }
+
+    const from = getRouteAirportInfo(parts[0]);
+    const to = getRouteAirportInfo(parts[parts.length - 1]);
+
+    return `
+        <div class="aircraft-route-title">TRASA</div>
+        <div class="aircraft-route-row">
+            <div class="aircraft-route-airport">
+                <div class="aircraft-route-code">${escapeHtml(from.city)}</div>
+            </div>
+            <div class="aircraft-route-center">
+                <div class="aircraft-route-plane">✈</div>
+            </div>
+            <div class="aircraft-route-airport to">
+                <div class="aircraft-route-code">${escapeHtml(to.city)}</div>
+            </div>
+        </div>
+    `;
+}
+
 async function updateFlightCard(f){
 
     syncSelectedHistory();
@@ -5962,6 +6157,10 @@ async function updateFlightCard(f){
                     airline.name
                 )}
 
+            </div>
+
+            <div class="route-box aircraft-route-box" data-aircraft-route>
+                ${renderAircraftRoute(f.route)}
             </div>
 
             <div class="sheet-hint">
@@ -8397,6 +8596,12 @@ function updateLiveCard(f){
     }
 
 
+    /* Trasa – aktualizowana na żywo bez przebudowy karty */
+    const routeEl = card.querySelector("[data-aircraft-route]");
+    if(routeEl){
+        routeEl.innerHTML = renderAircraftRoute(f.route);
+    }
+
     /* Kolor kropki przy callsign */
     const callDot = card.querySelector("h2 span");
     if(callDot && callDot.style){
@@ -8542,7 +8747,11 @@ async function load(){
 
                     source:
                         item.source ||
-                        "ADS-B"
+                        "ADS-B",
+
+                    route:
+                        item.route ||
+                        "N/A"
 
                 })
             )
