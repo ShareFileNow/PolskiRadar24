@@ -2661,39 +2661,100 @@ function renderAllFlightPaths(){
         checkbox.checked;
 
     /*
-        Tor każdego samolotu jest znany cały czas,
-        ale jest niewidoczny, dopóki samolot nie zostanie wybrany.
-        Po kliknięciu pokazujemy jego całą historię.
+        OPTYMALIZACJA:
+        niewybranych tras w ogóle nie tworzymy w Leaflet.
+        Wcześniej każda niewidoczna trasa miała do 300
+        osobnych polilinii, mimo że miała opacity:0.
+        Po dłuższym czasie robiło to ogromną liczbę obiektów.
+
+        Historia pozycji nadal jest zapisywana dla wszystkich
+        samolotów — zmieniamy tylko sposób jej RYSOWANIA.
     */
-    if(!enabled){
-        for(const layer of flightPathLines.values()){
+    const selectedIcao =
+        selected && selected.icao
+            ? selected.icao
+            : null;
+
+    /*
+        WAŻNE: przy zmianie samolotu usuwamy z mapy każdą starą
+        warstwę trasy. Dzięki temu nigdy nie zostaje linia
+        poprzednio wybranego samolotu. Zachowujemy historię w
+        flightHistories — usuwamy wyłącznie jej wizualizację.
+    */
+    for(const [icao, layer] of flightPathLines){
+        if(icao !== selectedIcao){
             if(map.hasLayer(layer))
                 map.removeLayer(layer);
+
+            layer.clearLayers();
+            flightPathLines.delete(icao);
+        }
+    }
+
+    if(!enabled || !selectedIcao){
+        for(const [icao, layer] of flightPathLines){
+            if(map.hasLayer(layer))
+                map.removeLayer(layer);
+
+            layer.clearLayers();
+            flightPathLines.delete(icao);
         }
         return;
     }
 
-    for(const [icao, history] of flightHistories){
+    const history =
+        flightHistories.get(selectedIcao);
 
-        if(!history || history.length < 2)
-            continue;
+    const entry =
+        markers.get(selectedIcao);
 
-        const entry = markers.get(icao);
-        const isSelected =
-            selected &&
-            selected.icao === icao;
+    if(!history || history.length < 2 || !entry){
+        const oldLayer = flightPathLines.get(selectedIcao);
+        if(oldLayer){
+            oldLayer.clearLayers();
+            if(map.hasLayer(oldLayer))
+                map.removeLayer(oldLayer);
+            flightPathLines.delete(selectedIcao);
+        }
+        return;
+    }
 
-        /*
-            Końcówka toru jest zawsze dokładnie na płynnej pozycji markera.
-        */
+    let layer =
+        flightPathLines.get(selectedIcao);
+
+    if(!layer){
+        layer = L.layerGroup();
+        flightPathLines.set(selectedIcao, layer);
+    }
+
+    /*
+        Rebudujemy trasę tylko wtedy, gdy historia faktycznie się
+        zmieniła albo warstwa została utworzona.
+        Sama płynna pozycja markera jest aktualizowana osobno przez
+        syncFlightPathEndpoints(), więc nie trzeba tu nic przebudowywać.
+    */
+    const first = history[0];
+    const last = history[history.length - 1];
+    const routeSignature =
+        history.length + "|" +
+        (first?.[0] ?? "") + "|" +
+        (first?.[1] ?? "") + "|" +
+        (last?.[0] ?? "") + "|" +
+        (last?.[1] ?? "") + "|" +
+        (last?.[2] ?? "");
+
+    if(layer._routeSignature !== routeSignature){
+
         let displayHistory = history.slice();
 
-        if(entry && Array.isArray(entry.cur)){
+        if(Array.isArray(entry.cur)){
             displayHistory = history.slice(0, -1);
+
             const currentAlt =
                 entry.data && Number.isFinite(entry.data.alt)
                 ? entry.data.alt
                 : (history[history.length - 1]?.[2] ?? null);
+
             displayHistory.push([
                 entry.cur[0],
                 entry.cur[1],
@@ -2701,110 +2762,12 @@ function renderAllFlightPaths(){
             ]);
         }
 
-        let layer = flightPathLines.get(icao);
-
-        if(!layer){
-            layer = L.layerGroup();
-            flightPathLines.set(icao, layer);
-        }
-
-        /*
-            Usuwamy tylko stare odcinki tej jednej trasy i budujemy je ponownie.
-            Dzięki temu każdy odcinek może mieć kolor wynikający z wysokości.
-        */
         layer.clearLayers();
 
         for(let i = 1; i < displayHistory.length; i++){
             const a = displayHistory[i - 1];
             const b = displayHistory[i];
 
-            /*
-                KAŻDY ODCINEK ma własny kolor wynikający z wysokości
-                zapisanej w momencie jego utworzenia.
-                Dzięki temu stary kolor NIE zmienia się, gdy samolot
-                później wznosi się albo zniża.
-            */
-            const segmentAlt =
-                Number.isFinite(a[2])
-                ? a[2]
-                : (Number.isFinite(b[2]) ? b[2] : null);
-
-            const segmentGround =
-                entry?.data?.ground === true &&
-                i === displayHistory.length - 1;
-
-            const segmentColor =
-                getAltitudeColor(
-                    segmentAlt,
-                    segmentGround
-                );
-
-            const segment = L.polyline(
-                [
-                    [a[0], a[1]],
-                    [b[0], b[1]]
-                ],
-                {
-                    color: segmentColor,
-                    weight: isSelected ? 4 : 2,
-                    opacity: isSelected ? .95 : 0,
-                    interactive: false
-                }
-            );
-
-            layer.addLayer(segment);
-        }
-
-        if(!map.hasLayer(layer))
-            layer.addTo(map);
-    }
-}
-
-
-/* Synchronizuje końcówkę niebieskiego toru z aktualną pozycją markera. */
-
-function syncFlightPathEndpoints(){
-
-    const checkbox = document.getElementById("showRoute");
-    if(!checkbox || !checkbox.checked)
-        return;
-
-    for(const [icao, layer] of flightPathLines){
-        const entry = markers.get(icao);
-        const history = flightHistories.get(icao);
-
-        if(!entry || !history || history.length < 2)
-            continue;
-
-        if(!Array.isArray(entry.cur))
-            continue;
-
-        /*
-            Aktualizujemy tylko końcówkę trasy, zachowując jej kolory wg wysokości.
-        */
-        let displayHistory = history.slice(0, -1);
-        const currentAlt =
-            entry.data && Number.isFinite(entry.data.alt)
-            ? entry.data.alt
-            : (history[history.length - 1]?.[2] ?? null);
-
-        displayHistory.push([
-            entry.cur[0],
-            entry.cur[1],
-            currentAlt
-        ]);
-
-        layer.clearLayers();
-
-        const isSelected =
-            selected &&
-            selected.icao === icao;
-
-        for(let i = 1; i < displayHistory.length; i++){
-            const a = displayHistory[i - 1];
-            const b = displayHistory[i];
-
-            /* Zachowujemy kolor każdego starego odcinka wg jego wysokości. */
             const segmentAlt =
                 Number.isFinite(a[2])
                 ? a[2]
@@ -2828,17 +2791,93 @@ function syncFlightPathEndpoints(){
                     ],
                     {
                         color: segmentColor,
-                        weight: isSelected ? 4 : 2,
-                        opacity: isSelected ? .95 : 0,
+                        weight: 4,
+                        opacity: .95,
                         interactive: false
                     }
                 )
             );
         }
 
-        if(!map.hasLayer(layer))
-            layer.addTo(map);
+        layer._routeSignature = routeSignature;
     }
+
+    if(!map.hasLayer(layer))
+        layer.addTo(map);
+}
+
+
+/* Synchronizuje TYLKO końcówkę wybranej trasy z aktualną pozycją markera.
+   Nie przebudowuje już setek polilinii przy każdej klatce. */
+
+function syncFlightPathEndpoints(){
+
+    const checkbox =
+        document.getElementById("showRoute");
+
+    if(!checkbox || !checkbox.checked || !selected?.icao)
+        return;
+
+    const icao = selected.icao;
+    const layer = flightPathLines.get(icao);
+    const entry = markers.get(icao);
+    const history = flightHistories.get(icao);
+
+    if(!layer || !entry || !history || history.length < 2)
+        return;
+
+    if(!Array.isArray(entry.cur))
+        return;
+
+    const layers = layer.getLayers();
+    if(!layers.length)
+        return;
+
+    const lastSegment =
+        layers[layers.length - 1];
+
+    if(!lastSegment || typeof lastSegment.setLatLngs !== "function")
+        return;
+
+    const prev =
+        history[history.length - 2];
+
+    if(!prev)
+        return;
+
+    const currentAlt =
+        entry.data && Number.isFinite(entry.data.alt)
+        ? entry.data.alt
+        : (history[history.length - 1]?.[2] ?? null);
+
+    const segmentColor =
+        getAltitudeColor(
+            Number.isFinite(prev[2])
+                ? prev[2]
+                : currentAlt,
+            entry.data?.ground === true
+        );
+
+    /*
+        Zmieniamy tylko geometrię ostatniego odcinka i jego kolor.
+        Wszystkie wcześniejsze odcinki pozostają nietknięte,
+        więc ich kolory wysokości są zachowane.
+    */
+    lastSegment.setLatLngs([
+        [prev[0], prev[1]],
+        [entry.cur[0], entry.cur[1]]
+    ]);
+
+    if(typeof lastSegment.setStyle === "function"){
+        lastSegment.setStyle({
+            color: segmentColor,
+            weight: 4,
+            opacity: .95
+        });
+    }
+
+    if(!map.hasLayer(layer))
+        layer.addTo(map);
 }
 
 
@@ -9455,7 +9494,7 @@ load();
 
 setInterval(
     load,
-    3000
+    5000
 );
 
 </script>
