@@ -3384,11 +3384,11 @@ function getAirline(callsign){
     ["RYR","Ryanair"],
     ["RUK","Ryanair UK"],
     ["RFR","Ryanair UK"],
-    ["RYS","Ryanair Sun (Buzz)"],
-    ["CLW","Buzz (Ryanair Sun)"],
-    ["MAY","Malta Air (Ryanair)"],
-    ["LDE","Lauda Europe (Ryanair)"],
-    ["LDM","Lauda Europe (Ryanair)"],
+    ["RYS","Ryanair Sun / Buzz"],
+    ["CLW","Buzz"],
+    ["MAY","Malta Air"],
+    ["LDE","Lauda Europe"],
+    ["LDM","Lauda Europe"],
 
     /* =========================================================
        WIZZ AIR GROUP
@@ -3402,7 +3402,7 @@ function getAirline(callsign){
        ========================================================= */
     ["NAX","Norwegian Air Shuttle"],
     ["NSZ","Norwegian Air Sweden"],
-    ["NOZ","Norwegian Air Sweden"],
+    ["NOZ","Norwegian Air Norway"],
     ["IBK","Norwegian Air International"],
 
     /* =========================================================
@@ -3419,8 +3419,13 @@ function getAirline(callsign){
     ["ENT","Enter Air"],
     ["SPP","SprintAir"],
     ["CLW","Buzz"],
-    ["RYR","Ryanair"],
     ["BDF","Bluebird Nordic"],
+    ["AMC","Air Management"],
+    ["AEE","Air Poland"],
+    ["VTA","Vistula Aviation"],
+    ["VOS","Volare Aviation"],
+    ["KRP","Carpatair"],
+    ["TDR","Trade Air"],
 
     /* =========================================================
        NIEMCY
@@ -3432,11 +3437,14 @@ function getAirline(callsign){
     ["CFG","Condor"],
     ["BER","Air Berlin"],
     ["GWI","Germanwings"],
-    ["TUI","TUI fly"],
-    ["BLX","TUI fly Belgium"],
+    ["TUI","TUI fly Germany"],
+    ["BLX","TUI fly"],
     ["HLX","Hapag-Lloyd"],
     ["GMI","Germania"],
     ["AHO","Air Hamburg"],
+    ["OAW","Helvetic Airways"],
+    ["KIS","Kiss"],
+    ["LHX","Lufthansa Express"],
 
     /* =========================================================
        UK / IRLANDIA
@@ -3456,6 +3464,12 @@ function getAirline(callsign){
     ["AUR","Aurigny Air Services"],
     ["AWC","Titan Airways"],
     ["JCB","Jota Aviation"],
+    ["SRT","Star Air"],
+    ["CFE","BA CityFlyer"],
+    ["FLI","AirUK"],
+    ["FLE","Flybe"],
+    ["LMG","Lumiwings"],
+    ["KRF","KRF"],
 
     /* =========================================================
        FRANCJA
@@ -3463,10 +3477,14 @@ function getAirline(callsign){
     ["AFR","Air France"],
     ["HOP","Air France HOP"],
     ["CCM","Air Corsica"],
-    ["FBU","French Bee"],
+    ["FBU","French bee"],
     ["FWI","Air Caraibes"],
     ["CRL","Corsair"],
     ["TVF","Transavia France"],
+    ["BIE","Air Med"],
+    ["RLA","Régional"],
+    ["JAF","TUI fly"],
+    ["SEU","Air Senegal"],
 
     /* =========================================================
        HOLANDIA / BELGIA
@@ -3479,6 +3497,8 @@ function getAirline(callsign){
     ["TFL","TUI fly Netherlands"],
     ["ABR","ASL Airlines"],
     ["FPO","ASL Airlines France"],
+    ["MPH","Martinair"],
+    ["HVN","Transavia"],
 
     /* =========================================================
        HISZPANIA
@@ -3489,6 +3509,13 @@ function getAirline(callsign){
     ["VOE","Volotea"],
     ["AEA","Air Europa"],
     ["BOS","Binter Canarias"],
+    ["VEC","Vueling"],
+    ["VVC","Viva Air Colombia"],
+    ["CNO","Canarias Airlines"],
+    ["IWD","Iberia Regional"],
+    ["RSC","Air Nostrum"],
+    ["ANE","Air Nostrum"],
+    ["CYL","Canair"],
 
     /* =========================================================
        PORTUGALIA
@@ -3497,14 +3524,23 @@ function getAirline(callsign){
     ["RVP","Sevenair"],
     ["WHT","White Airways"],
     ["RZO","Azores Airlines"],
+    ["ORC","Orbest"],
+    ["MPD","Air Plus Comet"],
+    ["NSE","NetJets Europe"],
 
     /* =========================================================
-       WLOCHY
+       WŁOCHY
        ========================================================= */
     ["ITY","ITA Airways"],
     ["AZA","Alitalia"],
     ["DLA","Air Dolomiti"],
     ["VIC","Volotea Italy"],
+    ["ISS","Meridiana"],
+    ["AHY","Air Italy"],
+    ["TAM","Neos"],
+    ["NOS","Neos"],
+    ["SMX","Smarte Aviation"],
+    ["LIL","Lion Air Italy"],
 
     /* =========================================================
        SZWAJCARIA / AUSTRIA
@@ -3513,14 +3549,19 @@ function getAirline(callsign){
     ["EDW","Edelweiss Air"],
     ["AUA","Austrian Airlines"],
     ["TYR","Tyrolean Airways"],
+    ["OAW","Helvetic Airways"],
+    ["GAC","Global Aviation"],
+    ["SJB","Swiss Jet"],
+    ["AEE","Air Alps"],
 
     /* =========================================================
-       BAŁKANY / EUROPA SRODKOWA
+       BAŁKANY / EUROPA ŚRODKOWA
        ========================================================= */
     ["AEE","Aegean Airlines"],
     ["OAL","Olympic Air"],
     ["ASL","Air Serbia"],
-    ["AJA","Air Serbia / AnadoluJet"],
+    ["AJA","AnadoluJet"],
+    ["JU","Air Serbia"],
     ["MNE","Montenegro Airlines"],
     ["CTN","Croatia Airlines"],
     ["ADL","Adria Airways"],
@@ -3533,20 +3574,32 @@ function getAirline(callsign){
     ["ROT","TAROM"],
     ["MLD","Air Moldova"],
     ["HYS","HiSky"],
+    ["MFA","Moldavian Airlines"],
+    ["LZB","Bulgaria Air"],
+    ["RDO","Tarom"],
+    ["SMW","SkyUp"],
+    ["MSI","Motor Sich Airlines"],
+    ["WRC","Windrose Airlines"],
 
     /* =========================================================
        TURCJA
        ========================================================= */
     ["THY","Turkish Airlines"],
-    ["TKJ","Turkish Airlines"],
+    ["TKJ","AJet"],
     ["PGT","Pegasus Airlines"],
     ["SXS","SunExpress"],
-    ["AJT","AnadoluJet"],
+    ["AJA","AnadoluJet"],
     ["TWI","Tailwind Airlines"],
     ["OHY","Onur Air"],
     ["CAI","Corendon Airlines"],
     ["CND","Corendon Dutch Airlines"],
     ["FHY","Freebird Airlines"],
+    ["MNB","MNG Airlines"],
+    ["THT","Turkish Cargo"],
+    ["JTW","Jetways"],
+    ["TUR","TUR Aviation"],
+    ["EAF","Electra Airways"],
+    ["AMQ","Air 001"],
 
     /* =========================================================
        SKANDYNAWIA
@@ -3554,7 +3607,7 @@ function getAirline(callsign){
     ["SAS","SAS Scandinavian Airlines"],
     ["NAX","Norwegian Air Shuttle"],
     ["NSZ","Norwegian Air Sweden"],
-    ["NOZ","Norwegian Air Sweden"],
+    ["NOZ","Norwegian Air Norway"],
     ["IBK","Norwegian Air International"],
     ["FIN","Finnair"],
     ["BTI","airBaltic"],
@@ -3565,6 +3618,10 @@ function getAirline(callsign){
     ["SCW","Braathens Regional Airways"],
     ["BRX","Braathens Regional Airlines"],
     ["SNO","Sundair"],
+    ["AAN","AnadoluJet"],
+    ["FLI","Flyr"],
+    ["EDR","Eurowings Europe"],
+    ["FGH","Flyr"],
 
     /* =========================================================
        ROSJA / WNP
@@ -3581,6 +3638,13 @@ function getAirline(callsign){
     ["WRC","Windrose Airlines"],
     ["MSI","Motor Sich Airlines"],
     ["RVN","Russian Sky"],
+    ["KAR","KrasAvia"],
+    ["KZR","Air Astana"],
+    ["SVR","Ural Airlines"],
+    ["CDG","Rossiya"],
+    ["LNX","NordStar"],
+    ["TYA","Taimyr Air"],
+    ["CEF","CSE"],
 
     /* =========================================================
        UKRAINA / MOŁDAWIA
@@ -3590,6 +3654,10 @@ function getAirline(callsign){
     ["MSI","Motor Sich Airlines"],
     ["MLD","Air Moldova"],
     ["HYS","HiSky"],
+    ["SQP","SkyUp"],
+    ["WRC","Windrose"],
+    ["UDC","Ur Airlines"],
+    ["AEU","Air Enterprise"],
 
     /* =========================================================
        CENTRALNA AZJA
@@ -3603,9 +3671,14 @@ function getAirline(callsign){
     ["TAJ","Tajik Air"],
     ["KGZ","Avia Traffic Company"],
     ["AKF","Air Kyrgyzstan"],
+    ["CAI","Caspian Airlines"],
+    ["AHW","Ariana Afghan Airlines"],
+    ["ABQ","Air Blue"],
+    ["KAC","Kam Air"],
+    ["FEG","FlyArystan"],
 
     /* =========================================================
-       BLISKI WSCHOD
+       BLISKI WSCHÓD
        ========================================================= */
     ["UAE","Emirates"],
     ["QTR","Qatar Airways"],
@@ -3625,6 +3698,13 @@ function getAirline(callsign){
     ["SYR","SyrianAir"],
     ["IRA","Iran Air"],
     ["IRM","Mahan Air"],
+    ["FJR","Al Ahsa"],
+    ["KNE","Nas Air"],
+    ["NCM","Nesma Airlines"],
+    ["FDB","flydubai"],
+    ["WAZ","Wizz Air Abu Dhabi"],
+    ["GLO","Gulf Air"],
+    ["LBO","Lebanese Air Transport"],
 
     /* =========================================================
        AFRYKA PÓŁNOCNA
@@ -3637,6 +3717,11 @@ function getAirline(callsign){
     ["TAR","Tunisair"],
     ["LAA","Libyan Airlines"],
     ["LNA","Libyan Wings"],
+    ["TUI","Tunisair"],
+    ["MAI","Mauritania Airlines"],
+    ["SEY","Air Seychelles"],
+    ["NMA","Nile Air"],
+    ["LBT","Libyan Airlines"],
 
     /* =========================================================
        AFRYKA
@@ -3657,6 +3742,18 @@ function getAirline(callsign){
     ["MDG","Madagascar Airlines"],
     ["TAAG","TAAG Angola Airlines"],
     ["COM","Comair"],
+    ["RAM","Royal Air Maroc"],
+    ["DTA","TAAG Angola Airlines"],
+    ["TLM","Air Tanzania"],
+    ["TAN","Tanga Airlines"],
+    ["KAC","Kam Air"],
+    ["SHY","Skyward Express"],
+    ["FHY","Fly540"],
+    ["FYW","Fastjet"],
+    ["SWN","South African Express"],
+    ["LNK","Linhas Aereas de Mocambique"],
+    ["WON","World2Fly"],
+    ["RWD","RwandAir"],
 
     /* =========================================================
        USA
@@ -3671,10 +3768,7 @@ function getAirline(callsign){
     ["FFT","Frontier Airlines"],
     ["NKS","Spirit Airlines"],
     ["SCX","Sun Country Airlines"],
-
-    /* =========================================================
-       USA REGIONAL
-       ========================================================= */
+    ["AAY","Allegiant Air"],
     ["SKW","SkyWest Airlines"],
     ["RPA","Republic Airways"],
     ["ENY","Envoy Air"],
@@ -3685,6 +3779,18 @@ function getAirline(callsign){
     ["PSA","PSA Airlines"],
     ["CPZ","Compass Airlines"],
     ["UCA","CommutAir"],
+    ["GLO","Gulfstream"],
+    ["XOJ","XOJET"],
+    ["EJA","NetJets"],
+    ["NJE","NetJets Europe"],
+    ["LXJ","Flexjet"],
+    ["FTH","Mountain Aviation"],
+    ["JUS","USA Jet Airlines"],
+    ["MXY","Maxjet"],
+    ["QXE","Horizon Air"],
+    ["SNC","Sun Country"],
+    ["TRS","Air Transat"],
+    ["VXP","Avelo Airlines"],
 
     /* =========================================================
        KANADA
@@ -3696,6 +3802,11 @@ function getAirline(callsign){
     ["TSC","Air Transat"],
     ["POE","Porter Airlines"],
     ["SWG","Sunwing Airlines"],
+    ["CDR","Canadian North"],
+    ["FLE","Flair Airlines"],
+    ["SKV","Sky Regional"],
+    ["BLS","Bearskin Airlines"],
+    ["CDN","Canadian North"],
 
     /* =========================================================
        AMERYKA ŚRODKOWA
@@ -3708,6 +3819,10 @@ function getAirline(callsign){
     ["CMP","Copa Airlines"],
     ["BWA","Caribbean Airlines"],
     ["CAY","Cayman Airways"],
+    ["LRC","LACSA"],
+    ["TGU","TAG Airlines"],
+    ["SAN","Sky Airline"],
+    ["TUR","Tropic Ocean Airways"],
 
     /* =========================================================
        AMERYKA POŁUDNIOWA
@@ -3724,6 +3839,14 @@ function getAirline(callsign){
     ["SKY","SKY Airline"],
     ["JAT","JetSMART"],
     ["VCV","Conviasa"],
+    ["TAM","LATAM"],
+    ["LPE","LATAM Peru"],
+    ["LNE","LATAM Ecuador"],
+    ["LCO","LATAM Colombia"],
+    ["AVA","Avianca"],
+    ["ONE","One Airlines"],
+    ["SKU","Sky Airline"],
+    ["LXP","LATAM Express"],
 
     /* =========================================================
        CHINY
@@ -3751,7 +3874,13 @@ function getAirline(callsign){
     ["JDY","Beijing Capital Airlines"],
     ["CNH","Grand China Air"],
     ["YZR","Yangtze River Airlines"],
-    ["G5","China Express Airlines"],
+    ["CBJ","Beijing Airlines"],
+    ["HXA","Hongtu Airlines"],
+    ["JYH","Joy Air"],
+    ["OTT","OTT Airlines"],
+    ["CDC","Shenzhen Airlines"],
+    ["CSC","Sichuan Airlines"],
+    ["CXA","XiamenAir"],
 
     /* =========================================================
        HONG KONG / MACAO / TAIWAN
@@ -3763,6 +3892,9 @@ function getAirline(callsign){
     ["EVA","EVA Air"],
     ["MDA","Mandarin Airlines"],
     ["AMU","Air Macau"],
+    ["GAP","Greater Bay Airlines"],
+    ["TWB","Starlux Airlines"],
+    ["SJX","Starlux Airlines"],
 
     /* =========================================================
        JAPONIA
@@ -3784,7 +3916,12 @@ function getAirline(callsign){
     ["FWJ","Fuji Dream Airlines"],
     ["JHE","Fuji Dream Airlines"],
     ["ORC","Oriental Air Bridge"],
-    ["ANA","ANA Wings"],
+    ["JAC","Japan Air Commuter"],
+    ["NTH","New Central Airservice"],
+    ["AHX","Amakusa Airlines"],
+    ["HAC","Hokkaido Air System"],
+    ["JAR","Japan Airlines Regional"],
+    ["AKX","Air Nippon Network"],
 
     /* =========================================================
        KOREA
@@ -3797,6 +3934,8 @@ function getAirline(callsign){
     ["TWB","T'way Air"],
     ["ESR","Eastar Jet"],
     ["FGW","Fly Gangwon"],
+    ["KOR","Korean Air Cargo"],
+    ["AIH","Air Incheon"],
 
     /* =========================================================
        SINGAPUR / MALEZJA
@@ -3808,6 +3947,10 @@ function getAirline(callsign){
     ["XAX","AirAsia X"],
     ["TGG","Tigerair"],
     ["RMY","Raya Airways"],
+    ["MWG","MASWings"],
+    ["MXD","Malindo Air"],
+    ["FFM","Firefly"],
+    ["XMN","AirAsia X"],
 
     /* =========================================================
        TAJLANDIA
@@ -3815,6 +3958,11 @@ function getAirline(callsign){
     ["THA","Thai Airways"],
     ["AIQ","Thai AirAsia"],
     ["TLM","Thai Lion Air"],
+    ["BKP","Bangkok Airways"],
+    ["TFT","Thai VietJet Air"],
+    ["NOK","Nok Air"],
+    ["VZJ","Thai Vietjet"],
+    ["TCT","Thai Air Cargo"],
 
     /* =========================================================
        INDONEZJA
@@ -3825,6 +3973,11 @@ function getAirline(callsign){
     ["CTV","Citilink"],
     ["AWQ","Indonesia AirAsia"],
     ["SJY","Sriwijaya Air"],
+    ["LKN","Nam Air"],
+    ["WON","Wings Air"],
+    ["TRV","TransNusa"],
+    ["BTV","Batik Air Indonesia"],
+    ["SJV","Super Air Jet"],
 
     /* =========================================================
        FILIPINY
@@ -3832,6 +3985,10 @@ function getAirline(callsign){
     ["PAL","Philippine Airlines"],
     ["CEB","Cebu Pacific"],
     ["APG","AirAsia Philippines"],
+    ["GAP","Philippine AirAsia"],
+    ["SRQ","SkyJet"],
+    ["SFS","Sunlight Air"],
+    ["T6","AirSWIFT"],
 
     /* =========================================================
        WIETNAM
@@ -3840,6 +3997,10 @@ function getAirline(callsign){
     ["VJC","VietJet Air"],
     ["VAG","Vietravel Airlines"],
     ["BAV","Bamboo Airways"],
+    ["HVN","Vietnam Airlines"],
+    ["VPA","Pacific Airlines"],
+    ["VNA","VASCO"],
+    ["VFC","VietJet Cargo"],
 
     /* =========================================================
        INDIE
@@ -3851,6 +4012,11 @@ function getAirline(callsign){
     ["JAI","Jet Airways"],
     ["AXB","Air India Express"],
     ["AKJ","Akasa Air"],
+    ["KAI","Kalitta Air India"],
+    ["IAD","Alliance Air"],
+    ["KAP","Kingfisher Airlines"],
+    ["GOW","Go First"],
+    ["LXR","Air India Regional"],
 
     /* =========================================================
        AUSTRALIA
@@ -3860,6 +4026,10 @@ function getAirline(callsign){
     ["JST","Jetstar Airways"],
     ["QLK","QantasLink"],
     ["RXA","Regional Express"],
+    ["VOI","Virgin Australia Regional"],
+    ["TGG","Tigerair Australia"],
+    ["JTE","Jetstar Asia"],
+    ["NWK","Newcastle Aviation"],
 
     /* =========================================================
        NOWA ZELANDIA / PACYFIK
@@ -3869,6 +4039,13 @@ function getAirline(callsign){
     ["SOL","Solomon Airlines"],
     ["PPT","Air Tahiti Nui"],
     ["TAH","Air Tahiti"],
+    ["AER","Air Rarotonga"],
+    ["KAP","Air Kiribati"],
+    ["NOK","Norfolk Island Airlines"],
+    ["PBN","Pacific Blue"],
+    ["VNL","Air Vanuatu"],
+    ["TON","Air Tonga"],
+    ["NPT","Air Niugini"],
 
     /* =========================================================
        CARGO
@@ -3885,9 +4062,22 @@ function getAirline(callsign){
     ["NCA","Nippon Cargo Airlines"],
     ["TAY","TNT Airways"],
     ["DHX","DHL Aviation"],
+    ["BOX","Air Hong Kong"],
+    ["ICL","CAL Cargo Airlines"],
+    ["QYI","European Air Transport"],
+    ["BCF","Boeing Company"],
+    ["GEC","Lufthansa Cargo"],
+    ["CAO","Air China Cargo"],
+    ["CKK","China Cargo Airlines"],
+    ["CSC","Sichuan Airlines Cargo"],
+    ["MXC","Mexicana Cargo"],
+    ["MNB","MNG Airlines"],
+    ["ABW","AirBridgeCargo"],
+    ["VDA","Volga-Dnepr Airlines"],
+    ["NPT","Air Niugini Cargo"],
 
     /* =========================================================
-       ACMI / CHARTER
+       ACMI / CHARTER / LEASING
        ========================================================= */
     ["ENT","Enter Air"],
     ["SPP","SprintAir"],
@@ -3909,22 +4099,82 @@ function getAirline(callsign){
     ["HYS","HiSky"],
     ["TDR","Trade Air"],
     ["WHT","White Airways"],
+    ["JAF","TUI fly Belgium"],
+    ["TFL","TUI fly Netherlands"],
+    ["MPH","Martinair"],
+    ["NJE","NetJets"],
+    ["EJA","NetJets"],
+    ["FJO","Fly Jordan"],
+    ["BLA","Blue Air"],
+    ["TAR","TAROM"],
+    ["JCB","Jota Aviation"],
+    ["VKG","Volga-Dnepr"],
 
     /* =========================================================
-       DODATKOWE DUŻE LINIE
+       DODATKOWE DUŻE LINIE EUROPEJSKIE
        ========================================================= */
-    ["AIC","Air India"],
+    ["SAS","SAS"],
+    ["FIN","Finnair"],
+    ["BTI","airBaltic"],
+    ["ICE","Icelandair"],
+    ["AEE","Aegean Airlines"],
+    ["CTN","Croatia Airlines"],
+    ["ASL","Air Serbia"],
+    ["TVS","Smartwings"],
+    ["ROT","TAROM"],
+    ["MLD","Air Moldova"],
+    ["HYS","HiSky"],
+    ["SWR","Swiss"],
+    ["AUA","Austrian Airlines"],
+    ["BEL","Brussels Airlines"],
+    ["IBE","Iberia"],
+    ["VLG","Vueling"],
+    ["VOE","Volotea"],
+    ["AEA","Air Europa"],
+    ["TAP","TAP Air Portugal"],
+    ["KLM","KLM"],
+    ["AFR","Air France"],
+    ["BAW","British Airways"],
+    ["DLH","Lufthansa"],
+    ["EWG","Eurowings"],
+
+    /* =========================================================
+       DODATKOWE DUŻE LINIE ŚWIATOWE
+       ========================================================= */
+    ["UAE","Emirates"],
+    ["QTR","Qatar Airways"],
+    ["ETD","Etihad Airways"],
+    ["THY","Turkish Airlines"],
+    ["TKJ","AJet"],
+    ["SVA","Saudia"],
+    ["GFA","Gulf Air"],
+    ["OMA","Oman Air"],
+    ["RJA","Royal Jordanian"],
+    ["MEA","Middle East Airlines"],
+    ["ELY","El Al"],
+    ["ETH","Ethiopian Airlines"],
+    ["KQA","Kenya Airways"],
+    ["SAA","South African Airways"],
+    ["RAM","Royal Air Maroc"],
+    ["MSR","EgyptAir"],
+    ["AAL","American Airlines"],
+    ["DAL","Delta Air Lines"],
+    ["UAL","United Airlines"],
+    ["SWA","Southwest Airlines"],
+    ["JBU","JetBlue"],
+    ["ACA","Air Canada"],
+    ["WJA","WestJet"],
+    ["QFA","Qantas"],
+    ["ANZ","Air New Zealand"],
     ["SIA","Singapore Airlines"],
     ["CPA","Cathay Pacific"],
     ["ANA","All Nippon Airways"],
     ["JAL","Japan Airlines"],
     ["KAL","Korean Air"],
     ["AAR","Asiana Airlines"],
-    ["QFA","Qantas"],
-    ["VOZ","Virgin Australia"],
     ["CCA","Air China"],
-    ["CES","China Eastern"],
-    ["CSN","China Southern"],
+    ["CES","China Eastern Airlines"],
+    ["CSN","China Southern Airlines"],
     ["EVA","EVA Air"],
     ["CAL","China Airlines"],
     ["MAS","Malaysia Airlines"],
@@ -3933,69 +4183,42 @@ function getAirline(callsign){
     ["PAL","Philippine Airlines"],
     ["HVN","Vietnam Airlines"],
     ["VJC","VietJet Air"],
+    ["AIC","Air India"],
     ["IGO","IndiGo"],
-    ["AMQ", "Air 001"],
-    ["EAF", "Electra Airways"],
-    ["NAX", "Norwegian Air Shuttle"],
-    ["NSZ", "Norwegian Air Sweden"],
-    ["NOZ", "Norwegian Air Sweden"],
-    ["IBK", "Norwegian Air International"], 
-    ["TKJ", "AJet"],
-    ["THY", "Turkish Airlines"],
 
     /* =========================================================
-       IATA - ZACHOWANE Z TWOJEJ LISTY
+       DODATKOWI OPERATORZY
        ========================================================= */
-    ["FR","Ryanair - IATA"],
-    ["U2","easyJet - IATA"],
-    ["BA","British Airways - IATA"],
-    ["LH","Lufthansa - IATA"],
-    ["AF","Air France - IATA"],
-    ["KL","KLM - IATA"],
-    ["IB","Iberia - IATA"],
-    ["TP","TAP Air Portugal - IATA"],
-    ["AZ","ITA Airways - IATA"],
-    ["SU","Aeroflot - IATA"],
-    ["TK","Turkish Airlines - IATA"],
-    ["EK","Emirates - IATA"],
-    ["QR","Qatar Airways - IATA"],
-    ["EY","Etihad Airways - IATA"],
-    ["SV","Saudia - IATA"],
-    ["MS","EgyptAir - IATA"],
-    ["ET","Ethiopian Airlines - IATA"],
-    ["SA","South African Airways - IATA"],
-    ["KQ","Kenya Airways - IATA"],
-    ["AT","Royal Air Maroc - IATA"],
-    ["AI","Air India - IATA"],
-    ["9W","Jet Airways - IATA"],
-    ["6E","IndiGo - IATA"],
-    ["SG","SpiceJet - IATA"],
-    ["I5","AirAsia India - IATA"],
-    ["UK","Vistara - IATA"],
-    ["NH","ANA - IATA"],
-    ["JL","JAL - IATA"],
-    ["KE","Korean Air - IATA"],
-    ["OZ","Asiana Airlines - IATA"],
-    ["CA","Air China - IATA"],
-    ["MU","China Eastern - IATA"],
-    ["CZ","China Southern - IATA"],
-    ["HU","Hainan Airlines - IATA"],
-    ["3U","Sichuan Airlines - IATA"],
-    ["MF","XiamenAir - IATA"],
-    ["FM","Shanghai Airlines - IATA"],
-    ["HO","Juneyao Airlines - IATA"],
-    ["9C","Spring Airlines - IATA"],
-    ["BC","Skymark - IATA"],
-    ["MM","Peach - IATA"],
-    ["GK","Jetstar Japan - IATA"],
-    ["HD","Air Do - IATA"],
-    ["7G","StarFlyer - IATA"],
-    ["NQ","Air Japan - IATA"],
-    ["FW","Fuji Dream - IATA"],
-    ["JH","Fuji Dream - IATA"],
-    ["6J","Solaseed - IATA"],
-    ["NU","Japan Transocean - IATA"],
-    ["EH","ANA Wings - IATA"]
+    ["AMQ","Air 001"],
+    ["EAF","Electra Airways"],
+    ["TKJ","AJet"],
+    ["THY","Turkish Airlines"],
+    ["RYR","Ryanair"],
+    ["WZZ","Wizz Air"],
+    ["EZY","easyJet"],
+    ["NAX","Norwegian Air Shuttle"],
+    ["BAW","British Airways"],
+    ["AFR","Air France"],
+    ["DLH","Lufthansa"],
+    ["KLM","KLM"],
+    ["IBE","Iberia"],
+    ["TAP","TAP Air Portugal"],
+    ["SWR","Swiss"],
+    ["AUA","Austrian Airlines"],
+    ["SAS","SAS"],
+    ["FIN","Finnair"],
+    ["VLG","Vueling"],
+    ["VOE","Volotea"],
+    ["AEA","Air Europa"],
+    ["ENT","Enter Air"],
+    ["TDR","Trade Air"],
+    ["WHT","White Airways"],
+    ["CFG","Condor"],
+    ["TOM","TUI Airways"],
+    ["VIR","Virgin Atlantic"],
+    ["EIN","Aer Lingus"],
+    ["EXS","Jet2"],
+    ["LOG","Loganair"],
 ];
 
     for(
